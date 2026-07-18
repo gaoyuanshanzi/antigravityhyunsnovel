@@ -12,38 +12,63 @@ const downloadBlob = (blob, filename) => {
   URL.revokeObjectURL(url);
 };
 
-// Generates Text content
-export const exportToTxt = (project) => {
-  let text = `${project.title}\n\n`;
+// Strip leading "Section N." or "Chapter N." prefix from a title if the user already typed it in
+// e.g. "Section 1 임꺽정" → "임꺽정", "Chapter 2 도레미" → "도레미"
+// This prevents "Section 1. Section 1 임꺽정" style duplication
+const cleanTitle = (prefix, index, rawTitle) => {
+  if (!rawTitle) return '';
+  // Remove patterns like "Section 1", "Section1", "Chapter 3", "chapter3" etc. from the start
+  const pattern = new RegExp(`^\\s*${prefix}\\s*${index}[.\\s]*`, 'i');
+  return rawTitle.replace(pattern, '').trim();
+};
 
-  // 1. Table of Contents
-  text += `==================== 목 차 ====================\n`;
-  let sectionIndex = 1;
-  let chapterIndex = 1;
-  project.sections.forEach((sec) => {
-    text += `- Section ${sectionIndex}. ${sec.title || `섹션 ${sectionIndex}`}\n`;
+// Build a flat list of { sectionIndex, chapterIndex, sec, ch } for global chapter numbering
+const buildChapterList = (project) => {
+  const list = [];
+  let globalChapterIdx = 1;
+  project.sections.forEach((sec, sIdx) => {
     sec.chapters.forEach((ch) => {
-      text += `  - Chapter ${chapterIndex}. ${ch.title || `챕터 ${chapterIndex}`}\n`;
-      chapterIndex++;
+      list.push({ sectionIndex: sIdx + 1, chapterIndex: globalChapterIdx, sec, ch });
+      globalChapterIdx++;
     });
-    sectionIndex++;
+  });
+  return list;
+};
+
+// Generates Text (.txt) content
+export const exportToTxt = (project) => {
+  const chapterList = buildChapterList(project);
+
+  let text = `${project.title || '소설 제목 없음'}\n\n`;
+
+  // 1. Table of Contents — clean vertical list
+  text += `==================== 목 차 ====================\n`;
+  project.sections.forEach((sec, sIdx) => {
+    const secIdx = sIdx + 1;
+    const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
+    text += `Section ${secIdx}. ${secTitle}\n`;
+  });
+  // Flat chapter list under TOC
+  chapterList.forEach(({ chapterIndex, ch }) => {
+    const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
+    text += `  Chapter ${chapterIndex}. ${chTitle}\n`;
   });
   text += `==============================================\n\n\n`;
 
-  // 2. Main Content
-  sectionIndex = 1;
-  chapterIndex = 1;
-  project.sections.forEach((sec) => {
-    text += `Section ${sectionIndex}. ${sec.title || `섹션 ${sectionIndex}`}\n`;
+  // 2. Main Content — section headers then chapters
+  project.sections.forEach((sec, sIdx) => {
+    const secIdx = sIdx + 1;
+    const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
+    text += `Section ${secIdx}. ${secTitle}\n`;
     text += `${'='.repeat(40)}\n\n`;
 
-    sec.chapters.forEach((ch) => {
-      text += `Chapter ${chapterIndex}. ${ch.title || `챕터 ${chapterIndex}`}\n`;
+    const chaptersInSection = chapterList.filter(item => item.sec.id === sec.id);
+    chaptersInSection.forEach(({ chapterIndex, ch }) => {
+      const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
+      text += `Chapter ${chapterIndex}. ${chTitle}\n`;
       text += `${'-'.repeat(25)}\n\n`;
       text += `${ch.content || ''}\n\n\n`;
-      chapterIndex++;
     });
-    sectionIndex++;
   });
 
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -52,6 +77,8 @@ export const exportToTxt = (project) => {
 
 // Generates HTML content
 export const exportToHtml = (project) => {
+  const chapterList = buildChapterList(project);
+
   let html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -60,62 +87,76 @@ export const exportToHtml = (project) => {
   <style>
     body {
       font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-      line-height: 1.8;
-      color: #333;
-      max-width: 800px;
+      line-height: 1.9;
+      color: #1f2937;
+      max-width: 820px;
       margin: 0 auto;
-      padding: 40px 20px;
-      background-color: #fcfcfc;
+      padding: 50px 24px;
+      background-color: #fff;
     }
-    h1 {
+    h1.book-title {
       text-align: center;
-      margin-bottom: 50px;
-      font-size: 2.5em;
+      margin-bottom: 60px;
+      font-size: 2.4em;
       color: #111;
+      border-bottom: 3px solid #111;
+      padding-bottom: 20px;
     }
-    h2 {
-      margin-top: 60px;
-      border-bottom: 2px solid #333;
+    h2.section-heading {
+      margin-top: 70px;
+      border-bottom: 2px solid #374151;
       padding-bottom: 10px;
-      color: #222;
-      font-size: 1.8em;
+      color: #111;
+      font-size: 1.6em;
     }
-    h3 {
+    h3.chapter-heading {
       margin-top: 40px;
-      color: #444;
-      font-size: 1.4em;
-      border-bottom: 1px dashed #ccc;
-      padding-bottom: 5px;
+      color: #374151;
+      font-size: 1.25em;
+      border-bottom: 1px dashed #d1d5db;
+      padding-bottom: 6px;
     }
     .toc {
-      background-color: #f0f0f0;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 30px;
-      margin-bottom: 50px;
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 32px 36px;
+      margin-bottom: 60px;
     }
-    .toc h2 {
-      margin-top: 0;
-      border-bottom: 1px solid #ccc;
-      font-size: 1.5em;
+    .toc-title {
+      font-size: 1.4em;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #111;
     }
-    .toc ul {
-      list-style-type: none;
-      padding-left: 0;
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
     }
-    .toc li {
-      margin: 10px 0;
+    .toc-list li {
+      padding: 5px 0;
+      line-height: 1.6;
     }
-    .toc a {
-      color: #0066cc;
+    .toc-section-item {
+      font-weight: 700;
+      font-size: 1em;
+      margin-top: 12px;
+      color: #1f2937;
+    }
+    .toc-chapter-item {
+      font-size: 0.92em;
+      padding-left: 22px;
+      color: #374151;
+    }
+    .toc-list a {
+      color: #4f46e5;
       text-decoration: none;
     }
-    .toc a:hover {
+    .toc-list a:hover {
       text-decoration: underline;
-    }
-    .toc-chapters {
-      padding-left: 20px;
-      list-style-type: circle;
     }
     .content-paragraph {
       margin-bottom: 1.5em;
@@ -126,60 +167,54 @@ export const exportToHtml = (project) => {
   </style>
 </head>
 <body>
-  <h1>${project.title || '소설 제목 없음'}</h1>
+  <h1 class="book-title">${project.title || '소설 제목 없음'}</h1>
   
   <div class="toc">
-    <h2>목차</h2>
-    <ul>
-  `;
+    <div class="toc-title">목차</div>
+    <ul class="toc-list">
+`;
 
-  // 1. Table of Contents HTML
-  let sectionIndex = 1;
-  let chapterIndex = 1;
-  project.sections.forEach((sec) => {
+  // TOC: Section headers interspersed with chapter items — vertically clean
+  project.sections.forEach((sec, sIdx) => {
+    const secIdx = sIdx + 1;
+    const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
     const secId = `sec-${sec.id}`;
-    html += `      <li>
-        <a href="#${secId}">Section ${sectionIndex}. ${sec.title || `섹션 ${sectionIndex}`}</a>
-        <ul class="toc-chapters">
-    `;
-    sec.chapters.forEach((ch) => {
+    html += `      <li class="toc-section-item"><a href="#${secId}">Section ${secIdx}. ${secTitle}</a></li>\n`;
+
+    const chaptersInSection = chapterList.filter(item => item.sec.id === sec.id);
+    chaptersInSection.forEach(({ chapterIndex, ch }) => {
+      const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
       const chId = `ch-${ch.id}`;
-      html += `          <li><a href="#${chId}">Chapter ${chapterIndex}. ${ch.title || `챕터 ${chapterIndex}`}</a></li>`;
-      chapterIndex++;
+      html += `      <li class="toc-chapter-item"><a href="#${chId}">Chapter ${chapterIndex}. ${chTitle}</a></li>\n`;
     });
-    html += `        </ul>
-      </li>
-    `;
-    sectionIndex++;
   });
 
   html += `    </ul>
   </div>
   
   <div class="content-body">
-  `;
+`;
 
-  // 2. Content HTML
-  sectionIndex = 1;
-  chapterIndex = 1;
-  project.sections.forEach((sec) => {
+  // Main content
+  project.sections.forEach((sec, sIdx) => {
+    const secIdx = sIdx + 1;
+    const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
     const secId = `sec-${sec.id}`;
-    html += `    <h2 id="${secId}">Section ${sectionIndex}. ${sec.title || `섹션 ${sectionIndex}`}</h2>\n`;
+    html += `    <h2 class="section-heading" id="${secId}">Section ${secIdx}. ${secTitle}</h2>\n`;
 
-    sec.chapters.forEach((ch) => {
+    const chaptersInSection = chapterList.filter(item => item.sec.id === sec.id);
+    chaptersInSection.forEach(({ chapterIndex, ch }) => {
+      const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
       const chId = `ch-${ch.id}`;
-      html += `    <h3 id="${chId}">Chapter ${chapterIndex}. ${ch.title || `챕터 ${chapterIndex}`}</h3>\n`;
-      
-      // Formatting paragraphs by splitting lines
+      html += `    <h3 class="chapter-heading" id="${chId}">Chapter ${chapterIndex}. ${chTitle}</h3>\n`;
+
       const paragraphs = ch.content ? ch.content.split('\n') : [''];
       paragraphs.forEach((p) => {
         if (p.trim()) {
           html += `    <p class="content-paragraph">${p.trim()}</p>\n`;
         }
       });
-      chapterIndex++;
     });
-    sectionIndex++;
   });
 
   html += `  </div>
@@ -193,8 +228,9 @@ export const exportToHtml = (project) => {
 // Generates EPUB container format
 export const exportToEpub = async (project) => {
   const zip = new JSZip();
+  const chapterList = buildChapterList(project);
 
-  // 1. mimetype (Must be FIRST and UNCOMPRESSED in zip)
+  // 1. mimetype (UNCOMPRESSED)
   zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
 
   // 2. META-INF/container.xml
@@ -206,40 +242,31 @@ export const exportToEpub = async (project) => {
 </container>`;
   zip.folder('META-INF').file('container.xml', containerXml);
 
-  // Prepare manifest items and spine references
   let manifestItems = '';
   let spineItems = '';
   let tocItems = '';
-  let chapterIndex = 1;
-  let sectionIndex = 1;
-  
   const oebps = zip.folder('OEBPS');
 
-  // Loop through chapters to generate XHTML pages
-  project.sections.forEach((sec) => {
-    let sectionText = `Section ${sectionIndex}. ${sec.title || `섹션 ${sectionIndex}`}`;
-    tocItems += `    <li class="section-item">
-      <span>${sectionText}</span>
-      <ol>
-    `;
+  // Build section TOC items + chapter XHTML pages
+  project.sections.forEach((sec, sIdx) => {
+    const secIdx = sIdx + 1;
+    const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
+    tocItems += `    <li class="section-item">\n      <span>Section ${secIdx}. ${secTitle}</span>\n      <ol>\n`;
 
-    sec.chapters.forEach((ch) => {
+    const chaptersInSection = chapterList.filter(item => item.sec.id === sec.id);
+    chaptersInSection.forEach(({ chapterIndex, ch }) => {
+      const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
       const chFileName = `chapter_${chapterIndex}.xhtml`;
-      const chTitle = `Chapter ${chapterIndex}. ${ch.title || `챕터 ${chapterIndex}`}`;
-      
-      // Manifest and spine mapping
+
       manifestItems += `    <item id="chapter_${chapterIndex}" href="${chFileName}" media-type="application/xhtml+xml"/>\n`;
       spineItems += `    <itemref idref="chapter_${chapterIndex}"/>\n`;
-      
-      // TOC linking
-      tocItems += `        <li><a href="${chFileName}">${chTitle}</a></li>\n`;
+      tocItems += `        <li><a href="${chFileName}">Chapter ${chapterIndex}. ${chTitle}</a></li>\n`;
 
-      // Generate chapter body content
       const paragraphs = ch.content ? ch.content.split('\n') : [''];
-      let bodyParagraphsHtml = '';
+      let bodyHtml = '';
       paragraphs.forEach((p) => {
         if (p.trim()) {
-          bodyParagraphsHtml += `      <p class="content-paragraph">${p.trim()}</p>\n`;
+          bodyHtml += `      <p class="content-paragraph">${p.trim()}</p>\n`;
         }
       });
 
@@ -247,61 +274,48 @@ export const exportToEpub = async (project) => {
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="ko">
 <head>
-  <title>${chTitle}</title>
+  <title>Chapter ${chapterIndex}. ${chTitle}</title>
   <link rel="stylesheet" type="text/css" href="styles.css"/>
 </head>
 <body>
   <section class="chapter-page">
-    <div class="section-ref">${sectionText}</div>
-    <h2 class="chapter-title">${chTitle}</h2>
+    <div class="section-ref">Section ${secIdx}. ${secTitle}</div>
+    <h2 class="chapter-title">Chapter ${chapterIndex}. ${chTitle}</h2>
     <div class="chapter-content">
-${bodyParagraphsHtml}
+${bodyHtml}
     </div>
   </section>
 </body>
 </html>`;
-
       oebps.file(chFileName, chapterXml);
-      chapterIndex++;
     });
 
-    tocItems += `      </ol>
-    </li>\n`;
-    sectionIndex++;
+    tocItems += `      </ol>\n    </li>\n`;
   });
 
-  // 3. OEBPS/styles.css
+  // 3. styles.css
   const stylesCss = `body {
   font-family: serif;
-  line-height: 1.8;
+  line-height: 1.9;
   margin: 10%;
-  color: #111;
+  color: #1f2937;
   background-color: #fff;
-}
-h1 {
-  text-align: center;
-  font-size: 2em;
-  margin-top: 20%;
-  margin-bottom: 10%;
-}
-h2 {
-  font-size: 1.5em;
-  margin-top: 10%;
-  border-bottom: 1px solid #666;
-  padding-bottom: 5px;
 }
 .section-ref {
   font-style: italic;
-  color: #666;
-  font-size: 0.9em;
-  margin-bottom: 5px;
+  color: #9ca3af;
+  font-size: 0.85em;
+  margin-bottom: 4px;
 }
 .chapter-title {
-  margin-top: 0;
+  font-size: 1.4em;
+  margin-bottom: 1.5em;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 8px;
 }
 .content-paragraph {
   text-indent: 1em;
-  margin-bottom: 1.2em;
+  margin-bottom: 1.3em;
   text-align: justify;
 }
 nav#toc ol {
@@ -315,13 +329,12 @@ nav#toc ol ol {
 .section-item > span {
   font-weight: bold;
   display: block;
-  margin-top: 15px;
-  font-size: 1.1em;
+  margin-top: 14px;
 }
 `;
   oebps.file('styles.css', stylesCss);
 
-  // 4. OEBPS/toc.xhtml (EPUB 3 Table of Contents)
+  // 4. toc.xhtml
   const tocXhtml = `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="ko">
@@ -340,7 +353,7 @@ ${tocItems}
 </html>`;
   oebps.file('toc.xhtml', tocXhtml);
 
-  // 5. OEBPS/content.opf
+  // 5. content.opf
   const contentOpf = `<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="3.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -361,7 +374,6 @@ ${spineItems}
 </package>`;
   oebps.file('content.opf', contentOpf);
 
-  // Generate ZIP and download
   const content = await zip.generateAsync({ type: 'blob', mimeType: 'application/epub+zip' });
   downloadBlob(content, `${project.title || '소설'}.epub`);
 };
