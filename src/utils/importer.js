@@ -8,7 +8,7 @@ export const importFromHtml = (htmlString, overrideTitle) => {
   const doc = parser.parseFromString(htmlString, 'text/html');
 
   // Extract title
-  const titleEl = doc.querySelector('h1.book-title');
+  const titleEl = doc.querySelector('h1.book-title') || doc.querySelector('h1');
   const title = overrideTitle || titleEl?.textContent?.trim() || '가져온 소설';
 
   // Get the main content container
@@ -20,8 +20,10 @@ export const importFromHtml = (htmlString, overrideTitle) => {
   let currentChapter = null;
 
   children.forEach((node) => {
-    // 1. Check for Section Headings
-    if (node.matches('h2.section-heading')) {
+    const tagName = node.tagName.toUpperCase();
+
+    // 1. Check for Section Headings (H2)
+    if (tagName === 'H2') {
       const secTitle = node.textContent.trim().replace(/^Section\s+\d+[.\s]*/i, '').trim();
       currentSection = {
         id: genId(),
@@ -31,8 +33,8 @@ export const importFromHtml = (htmlString, overrideTitle) => {
       sections.push(currentSection);
       currentChapter = null; // Reset current chapter for the new section
     } 
-    // 2. Check for Chapter Headings
-    else if (node.matches('h3.chapter-heading')) {
+    // 2. Check for Chapter Headings (H3)
+    else if (tagName === 'H3') {
       // Safety fallback: if chapter is found before any section
       if (!currentSection) {
         currentSection = {
@@ -51,11 +53,29 @@ export const importFromHtml = (htmlString, overrideTitle) => {
       };
       currentSection.chapters.push(currentChapter);
     } 
-    // 3. Check for Chapter content blocks
-    else if (node.matches('.chapter-content-block') || node.matches('.content-body > div')) {
+    // 3. Check for Chapter content blocks (All sibling nodes that are not headings/TOC/styles)
+    else if (
+      tagName !== 'H1' && 
+      tagName !== 'STYLE' && 
+      tagName !== 'SCRIPT' && 
+      tagName !== 'NAV' &&
+      !node.classList.contains('toc')
+    ) {
       if (currentChapter) {
-        // Retrieve the entire innerHTML directly (retains all tags, br, div, sup, sub formatting)
-        currentChapter.content = node.innerHTML;
+        const paragraphHtml = node.innerHTML;
+        
+        // If it's the new single-block format, override directly
+        if (node.classList.contains('chapter-content-block')) {
+          currentChapter.content = paragraphHtml;
+        } 
+        // If it's the legacy paragraph/div format, accumulate with line breaks
+        else {
+          if (currentChapter.content) {
+            currentChapter.content += '<br>' + paragraphHtml;
+          } else {
+            currentChapter.content = paragraphHtml;
+          }
+        }
       }
     }
   });
