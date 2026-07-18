@@ -7,35 +7,37 @@ export const importFromHtml = (htmlString, overrideTitle) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlString, 'text/html');
 
-  // Extract title
+  // Extract book title
   const titleEl = doc.querySelector('h1.book-title') || doc.querySelector('h1');
   const title = overrideTitle || titleEl?.textContent?.trim() || '가져온 소설';
 
-  // Get the main content container
-  const contentBody = doc.querySelector('.content-body') || doc.body;
-  const children = Array.from(contentBody.children);
+  // Gather all h2 and h3 elements across the document.
+  // Exclude headings nested inside TOC (table of contents) container.
+  const headingElements = Array.from(doc.querySelectorAll('h2, h3')).filter((el) => {
+    return !el.closest('.toc') && !el.closest('nav');
+  });
 
   const sections = [];
   let currentSection = null;
   let currentChapter = null;
 
-  children.forEach((node) => {
-    const tagName = node.tagName.toUpperCase();
+  headingElements.forEach((heading, idx) => {
+    const tagName = heading.tagName.toUpperCase();
 
-    // 1. Check for Section Headings (H2)
+    // 1. Handle Section Heading (H2)
     if (tagName === 'H2') {
-      const secTitle = node.textContent.trim().replace(/^Section\s+\d+[.\s]*/i, '').trim();
+      const secTitle = heading.textContent.trim().replace(/^Section\s+\d+[.\s]*/i, '').trim();
       currentSection = {
         id: genId(),
         title: secTitle,
         chapters: []
       };
       sections.push(currentSection);
-      currentChapter = null; // Reset current chapter for the new section
+      currentChapter = null; // reset active chapter context for the new section
     } 
-    // 2. Check for Chapter Headings (H3)
+    // 2. Handle Chapter Heading (H3)
     else if (tagName === 'H3') {
-      // Safety fallback: if chapter is found before any section
+      // Fallback in case of loose chapters before any section is defined
       if (!currentSection) {
         currentSection = {
           id: genId(),
@@ -44,39 +46,52 @@ export const importFromHtml = (htmlString, overrideTitle) => {
         };
         sections.push(currentSection);
       }
-      
-      const chTitle = node.textContent.trim().replace(/^Chapter\s+\d+[.\s]*/i, '').trim();
+
+      const chTitle = heading.textContent.trim().replace(/^Chapter\s+\d+[.\s]*/i, '').trim();
       currentChapter = {
         id: genId(),
         title: chTitle,
         content: ''
       };
       currentSection.chapters.push(currentChapter);
-    } 
-    // 3. Check for Chapter content blocks (All sibling nodes that are not headings/TOC/styles)
-    else if (
-      tagName !== 'H1' && 
-      tagName !== 'STYLE' && 
-      tagName !== 'SCRIPT' && 
-      tagName !== 'NAV' &&
-      !node.classList.contains('toc')
-    ) {
-      if (currentChapter) {
-        const paragraphHtml = node.innerHTML;
-        
-        // If it's the new single-block format, override directly
-        if (node.classList.contains('chapter-content-block')) {
-          currentChapter.content = paragraphHtml;
+
+      // Traversal: Collect all sibling elements between this chapter heading and the next heading element
+      const collectedContent = [];
+      const nextHeading = headingElements[idx + 1];
+      let sibling = heading.nextSibling;
+
+      while (sibling && sibling !== nextHeading) {
+        if (sibling.nodeType === Node.ELEMENT_NODE) {
+          const siblingTagName = sibling.tagName.toUpperCase();
+          
+          // Safety cutoff if another heading is encountered directly
+          if (siblingTagName === 'H2' || siblingTagName === 'H3') {
+            break;
+          }
+          
+          // Filter out layout wrappers or script injections
+          if (siblingTagName !== 'STYLE' && siblingTagName !== 'SCRIPT' && siblingTagName !== 'NAV') {
+            // New design uses a wrapper container, extract its clean interior directly
+            if (sibling.classList.contains('chapter-content-block')) {
+              collectedContent.push(sibling.innerHTML);
+            } 
+            // Legacy formats append the entire element representation
+            else {
+              collectedContent.push(sibling.outerHTML || sibling.innerHTML);
+            }
+          }
         } 
-        // If it's the legacy paragraph/div format, accumulate with line breaks
-        else {
-          if (currentChapter.content) {
-            currentChapter.content += '<br>' + paragraphHtml;
-          } else {
-            currentChapter.content = paragraphHtml;
+        // Text nodes directly under the body
+        else if (sibling.nodeType === Node.TEXT_NODE) {
+          const text = sibling.textContent.trim();
+          if (text) {
+            collectedContent.push(text);
           }
         }
+        sibling = sibling.nextSibling;
       }
+
+      currentChapter.content = collectedContent.join('<br>').trim();
     }
   });
 
