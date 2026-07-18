@@ -1530,9 +1530,18 @@
    Responsive/Mobile Styling (width <= 768px)
 ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .workspace-app {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+  }
+
   .workspace-navbar {
     padding: 0 14px;
-    height: 52px;
+    height: 52px !important;
+    flex-shrink: 0 !important;
   }
 
   .navbar-left h1 {
@@ -1553,7 +1562,9 @@
 
   .workspace-grid {
     display: block !important;
-    height: calc(100vh - 52px - 48px); /* subtract header and top tabs */
+    flex: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
     overflow: hidden;
     position: relative;
     width: 100vw !important;
@@ -1608,17 +1619,18 @@
     display: flex !important;
     align-items: center;
     justify-content: space-around;
-    height: 48px;
+    height: 48px !important;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    position: sticky;
-    top: 52px; /* sticky directly below top navbar */
+    position: relative !important;
+    top: 0 !important;
     left: 0;
     width: 100vw;
     z-index: 99;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
     box-sizing: border-box;
+    flex-shrink: 0 !important;
   }
 
   .mobile-tab-btn {
