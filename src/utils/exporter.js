@@ -108,33 +108,39 @@ const buildBookHtml = (project, forPdf = false) => {
       font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
       line-height: 1.9;
       color: #1f2937;
+      background-color: #ffffff;
+      margin: 0;
+      padding: ${forPdf ? '30px 40px' : '50px 24px'};
+    }
+    .pdf-content-wrapper {
       max-width: 820px;
       margin: 0 auto;
-      padding: ${forPdf ? '30px 40px' : '50px 24px'};
-      background-color: #fff;
+      background: #ffffff;
     }
     h1.book-title {
       text-align: center;
       margin-bottom: 60px;
-      font-size: ${forPdf ? '2em' : '2.4em'};
+      font-size: ${forPdf ? '2.2em' : '2.4em'};
       color: #111;
       border-bottom: 3px solid #111;
       padding-bottom: 20px;
+      margin-top: 20px;
     }
     h2.section-heading {
-      margin-top: ${forPdf ? '40px' : '70px'};
+      margin-top: ${forPdf ? '45px' : '70px'};
       border-bottom: 2px solid #374151;
       padding-bottom: 10px;
       color: #111;
-      font-size: ${forPdf ? '1.3em' : '1.6em'};
-      ${forPdf ? 'page-break-before: always;' : ''}
+      font-size: ${forPdf ? '1.4em' : '1.6em'};
+      page-break-before: always;
     }
     h3.chapter-heading {
-      margin-top: 30px;
+      margin-top: 35px;
       color: #374151;
-      font-size: ${forPdf ? '1.1em' : '1.25em'};
+      font-size: ${forPdf ? '1.15em' : '1.25em'};
       border-bottom: 1px dashed #d1d5db;
       padding-bottom: 6px;
+      page-break-inside: avoid;
     }
     .toc {
       background-color: #f9fafb;
@@ -142,7 +148,7 @@ const buildBookHtml = (project, forPdf = false) => {
       border-radius: 10px;
       padding: 28px 32px;
       margin-bottom: 50px;
-      ${forPdf ? 'page-break-after: always;' : ''}
+      page-break-after: always;
     }
     .toc-title {
       font-size: 1.3em;
@@ -183,52 +189,73 @@ const buildBookHtml = (project, forPdf = false) => {
       margin-bottom: 1.4em;
       text-indent: 1em;
       text-align: justify;
+      color: #1f2937;
+      font-size: 1.02rem;
+      white-space: pre-wrap;
     }
-    sup { font-size: 0.72em; vertical-align: super; }
-    sub { font-size: 0.72em; vertical-align: sub; }
+    sup {
+      font-size: 0.75em;
+      vertical-align: super;
+      line-height: 0;
+      background: rgba(79, 70, 229, 0.08);
+      padding: 0 2px;
+      border-radius: 3px;
+      color: #4f46e5;
+    }
+    sub {
+      font-size: 0.75em;
+      vertical-align: sub;
+      line-height: 0;
+      background: rgba(14, 165, 233, 0.08);
+      padding: 0 2px;
+      border-radius: 3px;
+      color: #0ea5e9;
+    }
   </style>
 </head>
 <body>
-  <h1 class="book-title">${project.title || '소설 제목 없음'}</h1>
-  <div class="toc">
-    <div class="toc-title">목차</div>
-    <ul class="toc-list">
+  <div class="pdf-content-wrapper">
+    <h1 class="book-title">${project.title || '소설 제목 없음'}</h1>
+    <div class="toc">
+      <div class="toc-title">목차</div>
+      <ul class="toc-list">
 ${project.sections.map((sec, sIdx) => {
   const secIdx = sIdx + 1;
   const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
   const secId = `sec-${sec.id}`;
   const chaptersInSection = chapterList.filter(item => item.sec.id === sec.id);
-  return `      <li class="toc-section-item"><a href="#${secId}">Section ${secIdx}. ${secTitle}</a></li>\n` +
+  return `        <li class="toc-section-item"><a href="#${secId}">Section ${secIdx}. ${secTitle}</a></li>\n` +
     chaptersInSection.map(({ chapterIndex, ch }) => {
       const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
       const chId = `ch-${ch.id}`;
-      return `      <li class="toc-chapter-item"><a href="#${chId}">Chapter ${chapterIndex}. ${chTitle}</a></li>`;
+      return `        <li class="toc-chapter-item"><a href="#${chId}">Chapter ${chapterIndex}. ${chTitle}</a></li>`;
     }).join('\n');
 }).join('\n')}
-    </ul>
-  </div>
-  <div class="content-body">
+      </ul>
+    </div>
+    <div class="content-body">
 ${project.sections.map((sec, sIdx) => {
   const secIdx = sIdx + 1;
   const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
   const secId = `sec-${sec.id}`;
   const chaptersInSection = chapterList.filter(item => item.sec.id === sec.id);
-  return `    <h2 class="section-heading" id="${secId}">Section ${secIdx}. ${secTitle}</h2>\n` +
+  return `      <h2 class="section-heading" id="${secId}">Section ${secIdx}. ${secTitle}</h2>\n` +
     chaptersInSection.map(({ chapterIndex, ch }) => {
       const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
       const chId = `ch-${ch.id}`;
-      // Parse HTML content into paragraphs — preserve sup/sub tags
       const rawContent = ch.content || '';
+      // Split content into paragraph tags correctly while preserving formatting
       const lines = rawContent
         .split(/<br\s*\/?>/i)
         .map(line => line.trim())
         .filter(line => line !== '' && line !== '<div>' && line !== '</div>');
       const paragraphsHtml = lines.length
-        ? lines.map(line => `    <p class="content-block">${line}</p>`).join('\n')
-        : `    <p class="content-block"></p>`;
-      return `    <h3 class="chapter-heading" id="${chId}">Chapter ${chapterIndex}. ${chTitle}</h3>\n${paragraphsHtml}`;
+        ? lines.map(line => `      <p class="content-block">${line}</p>`).join('\n')
+        : `      <p class="content-block"></p>`;
+      return `      <h3 class="chapter-heading" id="${chId}">Chapter ${chapterIndex}. ${chTitle}</h3>\n${paragraphsHtml}`;
     }).join('\n');
 }).join('\n')}
+    </div>
   </div>
 </body>
 </html>`;
@@ -242,23 +269,25 @@ export const exportToHtml = (project) => {
   downloadBlob(blob, `${project.title || '소설'}.html`);
 };
 
-// Generates PDF using html2pdf.js
+// Generates PDF using html2pdf.js (Robust element rendering fix)
 export const exportToPdf = async (project) => {
   const htmlContent = buildBookHtml(project, true);
 
-  // Render a visible (but pushed away) block container so html2canvas computes the layout safely
+  // 1. Create a fully visible temporary container on-screen
+  // Using opacity: 1 and a zIndex value to force browser layout rendering and prevent blank canvas captures
   const container = document.createElement('div');
   container.innerHTML = htmlContent;
   container.style.position = 'fixed';
   container.style.left = '0';
   container.style.top = '0';
   container.style.width = '800px';
-  container.style.zIndex = '-9999';
+  container.style.zIndex = '99999';
   container.style.background = '#ffffff';
-  container.style.opacity = '0.02'; // small positive opacity prevents Webkit layout skips
+  container.style.opacity = '1'; // Fully opaque to guarantee html2canvas reads pixel values
   document.body.appendChild(container);
 
-  const bodyContent = container.querySelector('body') || container;
+  // Extract the inner wrapper we want to print
+  const printTarget = container.querySelector('.pdf-content-wrapper') || container;
 
   const opt = {
     margin: [15, 15, 15, 15], // top, right, bottom, left (mm)
@@ -268,6 +297,7 @@ export const exportToPdf = async (project) => {
       scale: 2,
       useCORS: true,
       letterRendering: true,
+      background: '#ffffff', // Force canvas background fill to avoid transparency issues
       logging: false
     },
     jsPDF: {
@@ -279,12 +309,15 @@ export const exportToPdf = async (project) => {
   };
 
   try {
-    // Wait slightly for browser layout painting
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    await html2pdf().set(opt).from(bodyContent).save();
+    // 2. Wait 300ms for browser to calculate styling and layout paints
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    
+    // Save PDF
+    await html2pdf().set(opt).from(printTarget).save();
   } catch (error) {
     console.error('PDF Generation failed:', error);
   } finally {
+    // 3. Instantly clean up the temporary element
     document.body.removeChild(container);
   }
 };
