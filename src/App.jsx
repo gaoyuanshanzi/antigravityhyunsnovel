@@ -86,6 +86,14 @@ function App() {
     }
   }, [activeProjectId]);
 
+  // Force reset horizontal scroll offset when panel changes to avoid browser layout shifts
+  useEffect(() => {
+    const grid = document.querySelector('.workspace-grid');
+    if (grid) {
+      grid.scrollLeft = 0;
+    }
+  }, [activeMobilePanel]);
+
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
   // ═══════════════════════════════════════════════════════════
@@ -320,6 +328,31 @@ function App() {
         </div>
       </header>
 
+      {/* ── Mobile Top Navigation Tabs (Sticky below header) ── */}
+      <nav className="mobile-top-tabs">
+        <button
+          className={`mobile-tab-btn ${activeMobilePanel === 0 ? 'active' : ''}`}
+          onClick={() => setActiveMobilePanel(0)}
+        >
+          <List size={16} />
+          <span>소설 목록</span>
+        </button>
+        <button
+          className={`mobile-tab-btn ${activeMobilePanel === 1 ? 'active' : ''}`}
+          onClick={() => setActiveMobilePanel(1)}
+        >
+          <GitCommit size={16} />
+          <span>목차 마인드맵</span>
+        </button>
+        <button
+          className={`mobile-tab-btn ${activeMobilePanel === 2 ? 'active' : ''}`}
+          onClick={() => setActiveMobilePanel(2)}
+        >
+          <BookOpen size={16} />
+          <span>본문 에디터</span>
+        </button>
+      </nav>
+
       {/* ── Main 3-Panel Grid ── */}
       <main
         className="workspace-grid"
@@ -370,31 +403,6 @@ function App() {
           </div>
         </div>
       </main>
-
-      {/* ── Mobile Bottom Navigation ── */}
-      <nav className="mobile-bottom-nav">
-        <button
-          className={`mobile-nav-tab ${activeMobilePanel === 0 ? 'active' : ''}`}
-          onClick={() => setActiveMobilePanel(0)}
-        >
-          <List size={20} />
-          <span>목록</span>
-        </button>
-        <button
-          className={`mobile-nav-tab ${activeMobilePanel === 1 ? 'active' : ''}`}
-          onClick={() => setActiveMobilePanel(1)}
-        >
-          <GitCommit size={20} />
-          <span>목차</span>
-        </button>
-        <button
-          className={`mobile-nav-tab ${activeMobilePanel === 2 ? 'active' : ''}`}
-          onClick={() => setActiveMobilePanel(2)}
-        >
-          <BookOpen size={20} />
-          <span>집필</span>
-        </button>
-      </nav>
 
       {/* ── Export Modal ── */}
       {showExportModal && (

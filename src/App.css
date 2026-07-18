@@ -1298,8 +1298,9 @@
   display: contents; /* Normal layout flow on desktop */
 }
 
+.mobile-top-tabs,
 .mobile-bottom-nav {
-  display: none; /* Hide bottom tabs on desktop */
+  display: none; /* Hide mobile nav elements on desktop */
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1552,7 +1553,7 @@
 
   .workspace-grid {
     display: block !important;
-    height: calc(100vh - 52px - 56px); /* subtract header and bottom nav */
+    height: calc(100vh - 52px - 48px); /* subtract header and top tabs */
     overflow: hidden;
     position: relative;
     width: 100vw !important;
@@ -1602,41 +1603,58 @@
     overflow-y: auto !important;
   }
 
-  /* Bottom Navigation Bar */
-  .mobile-bottom-nav {
-    display: flex;
+  /* Mobile Top Tabs Navigation */
+  .mobile-top-tabs {
+    display: flex !important;
     align-items: center;
     justify-content: space-around;
-    height: 56px;
-    background: #ffffff;
-    border-top: 1px solid var(--glass-border);
-    position: fixed;
-    bottom: 0;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 52px; /* sticky directly below top navbar */
     left: 0;
     width: 100vw;
-    z-index: 100;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+    z-index: 99;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
   }
 
-  .mobile-nav-tab {
+  .mobile-tab-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 6px;
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     flex: 1;
-    padding: 8px 0;
-    transition: all 0.2s;
+    height: 100%;
+    transition: all 0.22s ease;
     font-family: inherit;
+    position: relative;
+    box-sizing: border-box;
   }
 
-  .mobile-nav-tab.active {
+  .mobile-tab-btn.active {
     color: var(--primary);
+  }
+
+  /* Active underline indicator styling */
+  .mobile-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 15%;
+    right: 15%;
+    height: 3px;
+    background: var(--primary);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
   }
 
   /* Mindmap: switch from 3-column horizontal to vertical single-column */
