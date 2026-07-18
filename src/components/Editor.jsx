@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Save, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FileText, CheckCircle, Superscript, Subscript } from 'lucide-react';
 
 const Editor = ({
   project,
@@ -7,54 +7,103 @@ const Editor = ({
   onUpdateChapterContent,
   isSaving
 }) => {
-  const [content, setContent] = useState('');
-  const [activeChapter, setActiveChapter] = useState(null);
+  const editorRef = useRef(null);
+  const lastChapterIdRef = useRef(null);
 
   // Find active chapter and section
   let chapter = null;
   let section = null;
-
   if (project && activeChapterId) {
     for (const sec of project.sections) {
       const ch = sec.chapters.find((c) => c.id === activeChapterId);
-      if (ch) {
-        chapter = ch;
-        section = sec;
-        break;
-      }
+      if (ch) { chapter = ch; section = sec; break; }
     }
   }
 
-  // Update editor value when active chapter changes
+  // Load content into editor when active chapter changes
   useEffect(() => {
-    if (chapter) {
-      setContent(chapter.content || '');
-      setActiveChapter(chapter);
-    } else {
-      setContent('');
-      setActiveChapter(null);
-    }
-  }, [activeChapterId, project]);
+    if (!editorRef.current) return;
 
-  // Handle local text change
-  const handleChange = (e) => {
-    const newContent = e.target.value;
-    setContent(newContent);
-    onUpdateChapterContent(activeChapterId, newContent);
+    // Only reload if the chapter actually changed
+    if (lastChapterIdRef.current === activeChapterId) return;
+    lastChapterIdRef.current = activeChapterId;
+
+    if (chapter) {
+      // Set innerHTML to support rich text (superscript/subscript)
+      editorRef.current.innerHTML = chapter.content || '';
+      editorRef.current.focus();
+    } else {
+      editorRef.current.innerHTML = '';
+    }
+  }, [activeChapterId, chapter]);
+
+  // Handle content change — save innerHTML (preserves <sup>/<sub> tags)
+  const handleInput = useCallback(() => {
+    if (!editorRef.current || !activeChapterId) return;
+    const htmlContent = editorRef.current.innerHTML;
+    onUpdateChapterContent(activeChapterId, htmlContent);
+  }, [activeChapterId, onUpdateChapterContent]);
+
+  // execCommand helper — works reliably for super/subscript
+  const applyFormat = useCallback((command) => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    document.execCommand(command, false, null);
+    // Trigger save after formatting
+    handleInput();
+  }, [handleInput]);
+
+  // Keyboard shortcut handler
+  const handleKeyDown = useCallback((e) => {
+    // Ctrl+Shift++ → Superscript (MS Word style)
+    if (e.ctrlKey && e.shiftKey && (e.key === '+' || e.key === '=')) {
+      e.preventDefault();
+      applyFormat('superscript');
+      return;
+    }
+    // Ctrl+Shift+= → Subscript
+    if (e.ctrlKey && e.shiftKey && e.key === '-') {
+      e.preventDefault();
+      applyFormat('subscript');
+      return;
+    }
+  }, [applyFormat]);
+
+  // Compute text stats from plain text (strip HTML tags)
+  const getPlainText = () => {
+    if (!editorRef.current) return '';
+    return editorRef.current.innerText || '';
   };
 
-  // Counting characters and words
-  const charCountWithSpace = content.length;
-  const charCountWithoutSpace = content.replace(/\s/g, '').length;
-  
-  // Word count (split by spaces, filtering empty strings)
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const [stats, setStats] = useState({ chars: 0, charsNoSpace: 0, words: 0 });
+
+  const updateStats = useCallback(() => {
+    const plain = getPlainText();
+    setStats({
+      chars: plain.length,
+      charsNoSpace: plain.replace(/\s/g, '').length,
+      words: plain.trim() ? plain.trim().split(/\s+/).length : 0,
+    });
+  }, []);
+
+  // Update stats on input
+  const handleInputWithStats = useCallback(() => {
+    handleInput();
+    updateStats();
+  }, [handleInput, updateStats]);
+
+  // Recalculate stats when chapter changes
+  useEffect(() => {
+    // Small delay to let the innerHTML get set first
+    const t = setTimeout(updateStats, 80);
+    return () => clearTimeout(t);
+  }, [activeChapterId, updateStats]);
 
   if (!chapter) {
     return (
       <div className="right-panel empty-editor animate-fade-in">
         <div className="glass-card empty-message">
-          <FileText size={48} className="pulse-icon" />
+          <FileText size={44} className="pulse-icon" />
           <h3>선택된 챕터가 없습니다</h3>
           <p>마인드맵에서 원하는 챕터(Chapter) 박스를 선택하면 소설을 집필할 수 있습니다.</p>
         </div>
@@ -64,6 +113,7 @@ const Editor = ({
 
   return (
     <div className="right-panel editor-panel">
+      {/* Panel Header */}
       <div className="panel-header">
         <div className="editor-info-header">
           <span className="editor-sec-ref">{section.title}</span>
@@ -71,40 +121,75 @@ const Editor = ({
         </div>
         <div className={`save-indicator ${isSaving ? 'saving' : 'saved'}`}>
           {isSaving ? (
-            <>
-              <span className="spinner"></span>
-              <span>자동 저장 중...</span>
-            </>
+            <><span className="spinner"></span><span>자동 저장 중...</span></>
           ) : (
-            <>
-              <CheckCircle size={14} className="check-icon" />
-              <span>로컬 저장 완료</span>
-            </>
+            <><CheckCircle size={13} className="check-icon" /><span>저장 완료</span></>
           )}
         </div>
       </div>
 
+      {/* Formatting Toolbar */}
+      <div className="editor-toolbar">
+        <div className="toolbar-group">
+          <button
+            className="toolbar-btn"
+            title="윗첨자 (Ctrl+Shift++)"
+            onMouseDown={(e) => {
+              e.preventDefault(); // prevent blur
+              applyFormat('superscript');
+            }}
+          >
+            <span className="toolbar-btn-content">
+              X<sup>2</sup>
+            </span>
+            <span className="toolbar-btn-label">윗첨자</span>
+          </button>
+          <button
+            className="toolbar-btn"
+            title="아래첨자 (Ctrl+Shift+-)"
+            onMouseDown={(e) => {
+              e.preventDefault(); // prevent blur
+              applyFormat('subscript');
+            }}
+          >
+            <span className="toolbar-btn-content">
+              X<sub>2</sub>
+            </span>
+            <span className="toolbar-btn-label">아래첨자</span>
+          </button>
+        </div>
+        <div className="toolbar-hint">
+          <span>단축키: 윗첨자 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>+</kbd> &nbsp;|&nbsp; 아래첨자 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>-</kbd></span>
+        </div>
+      </div>
+
+      {/* ContentEditable Editor Area */}
       <div className="editor-workspace">
-        <textarea
-          className="novel-textarea"
-          placeholder="여기에 소설 내용을 자유롭게 작성해 보세요. 입력 시 실시간으로 안전하게 자동 저장됩니다..."
-          value={content}
-          onChange={handleChange}
+        <div
+          ref={editorRef}
+          className="novel-editor"
+          contentEditable={true}
+          suppressContentEditableWarning={true}
+          onInput={handleInputWithStats}
+          onKeyDown={handleKeyDown}
+          data-placeholder="여기에 소설 내용을 자유롭게 작성해 보세요. 입력 시 실시간으로 자동 저장됩니다..."
+          spellCheck={false}
         />
       </div>
 
+      {/* Footer Stats */}
       <div className="editor-footer">
         <div className="stat-item">
           <span>글자 수 (공백 포함):</span>
-          <strong>{charCountWithSpace.toLocaleString()} 자</strong>
+          <strong>{stats.chars.toLocaleString()} 자</strong>
         </div>
         <div className="stat-item">
           <span>글자 수 (공백 제외):</span>
-          <strong>{charCountWithoutSpace.toLocaleString()} 자</strong>
+          <strong>{stats.charsNoSpace.toLocaleString()} 자</strong>
         </div>
         <div className="stat-item">
           <span>단어 수:</span>
-          <strong>{wordCount.toLocaleString()} 단어</strong>
+          <strong>{stats.words.toLocaleString()} 단어</strong>
         </div>
       </div>
     </div>

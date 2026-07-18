@@ -3,8 +3,8 @@ import Login from './components/Login';
 import ProjectList from './components/ProjectList';
 import MindMap from './components/MindMap';
 import Editor from './components/Editor';
-import { exportToTxt, exportToHtml, exportToEpub } from './utils/exporter';
-import { Download, Sparkles, LogOut, Moon, Sun, Info } from 'lucide-react';
+import { exportToTxt, exportToHtml, exportToEpub, exportToPdf } from './utils/exporter';
+import { Download, Sparkles, LogOut } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -310,6 +310,13 @@ function App() {
     }
   };
 
+  const triggerPdfExport = async () => {
+    if (activeProject) {
+      await exportToPdf(activeProject);
+      setShowExportModal(false);
+    }
+  };
+
   // Switch workspace mode logic (e.g. login gate)
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} />;
@@ -409,6 +416,12 @@ function App() {
                 <div className="option-badge">EPUB</div>
                 <h4>전자책 파일 (.epub)</h4>
                 <p>리디북스, 예스24, Apple Books 등 전자책 뷰어에 최적화된 표준화된 e-Reader용 포맷입니다.</p>
+              </button>
+
+              <button className="export-option-card pdf" onClick={triggerPdfExport}>
+                <div className="option-badge">PDF</div>
+                <h4>문서 파일 (.pdf)</h4>
+                <p>인쇄 및 기기 간 레이아웃 유지가 중요한 인쇄/제본용 포맷으로 소설 전체를 내보냅니다.</p>
               </button>
             </div>
 

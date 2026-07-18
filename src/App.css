@@ -824,28 +824,116 @@
 
 .editor-workspace {
   flex: 1;
-  padding: 28px 36px;
+  padding: 24px 36px 28px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.novel-textarea {
+/* Editor Toolbar */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 36px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 44px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.toolbar-btn:hover {
+  background: #f9fafb;
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.toolbar-btn-content {
+  font-weight: 700;
+  font-family: serif;
+}
+
+.toolbar-btn-label {
+  font-size: 0.7rem;
+}
+
+.toolbar-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.toolbar-hint kbd {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 0.65rem;
+  font-family: inherit;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+}
+
+/* Rich Text Editable Area */
+.novel-editor {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
-  resize: none;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', '나눔명조', serif;
   font-size: 1.05rem;
   line-height: 2;
   color: #1f2937;
   padding: 0;
+  min-height: 200px;
+  overflow-y: auto;
+  text-align: justify;
 }
 
-.novel-textarea::placeholder {
+.novel-editor:empty:before {
+  content: attr(data-placeholder);
   color: #c4c9d4;
   font-style: italic;
+}
+
+.novel-editor sup {
+  font-size: 0.75em;
+  vertical-align: super;
+  line-height: 0;
+  background: rgba(79, 70, 229, 0.08);
+  padding: 0 2px;
+  border-radius: 3px;
+  color: var(--primary);
+}
+
+.novel-editor sub {
+  font-size: 0.75em;
+  vertical-align: sub;
+  line-height: 0;
+  background: rgba(14, 165, 233, 0.08);
+  padding: 0 2px;
+  border-radius: 3px;
+  color: var(--secondary);
 }
 
 .editor-footer {
@@ -1046,7 +1134,7 @@
   border-radius: 20px;
   padding: 32px;
   width: 90%;
-  max-width: 680px;
+  max-width: 820px;
   box-shadow: 0 16px 48px rgba(0,0,0,0.15);
 }
 
@@ -1101,7 +1189,7 @@
 
 .export-options-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-bottom: 22px;
 }
@@ -1110,7 +1198,7 @@
   background: #f8f9fb;
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
-  padding: 18px;
+  padding: 18px 12px;
   text-align: left;
   cursor: pointer;
   transition: all 0.22s;
@@ -1127,6 +1215,7 @@
 .export-option-card.txt:hover { border-color: #6b7280; }
 .export-option-card.html:hover { border-color: var(--primary); }
 .export-option-card.epub:hover { border-color: var(--secondary); }
+.export-option-card.pdf:hover { border-color: var(--accent); }
 
 .option-badge {
   display: inline-block;
@@ -1141,6 +1230,7 @@
 .txt .option-badge { background: #f3f4f6; color: #6b7280; }
 .html .option-badge { background: rgba(79,70,229,0.08); color: var(--primary); }
 .epub .option-badge { background: rgba(14,165,233,0.08); color: var(--secondary); }
+.pdf .option-badge { background: rgba(124,58,237,0.08); color: var(--accent); }
 
 .export-option-card h4 {
   font-size: 0.87rem;
