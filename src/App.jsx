@@ -329,7 +329,7 @@ function App() {
         {/* Mobile sliding wrapper */}
         <div
           className="mobile-panels-slider"
-          style={{ transform: `translateX(-${activeMobilePanel * 33.3333}%)` }}
+          style={{ transform: `translateX(-${activeMobilePanel * 100}vw)` }}
         >
           {/* LEFT: Project List */}
           <div className="mobile-panel-slot">
