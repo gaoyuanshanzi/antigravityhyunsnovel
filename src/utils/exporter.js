@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import html2pdf from 'html2pdf.js';
 
 // Helper to download blob files
 const downloadBlob = (blob, filename) => {
@@ -103,9 +104,8 @@ const buildBookHtml = (project, forPdf = false) => {
   <meta charset="UTF-8">
   <title>${project.title || '소설'}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
     body {
-      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
       line-height: 1.9;
       color: #1f2937;
       max-width: 820px;
@@ -242,10 +242,23 @@ export const exportToHtml = (project) => {
   downloadBlob(blob, `${project.title || '소설'}.html`);
 };
 
-// Generates PDF using html2pdf.js (Directly rendering HTML string inside the iframe)
+// Generates PDF using html2pdf.js
 export const exportToPdf = async (project) => {
-  const html2pdf = (await import('html2pdf.js')).default;
   const htmlContent = buildBookHtml(project, true);
+
+  // Render a visible (but pushed away) block container so html2canvas computes the layout safely
+  const container = document.createElement('div');
+  container.innerHTML = htmlContent;
+  container.style.position = 'fixed';
+  container.style.left = '0';
+  container.style.top = '0';
+  container.style.width = '800px';
+  container.style.zIndex = '-9999';
+  container.style.background = '#ffffff';
+  container.style.opacity = '0.02'; // small positive opacity prevents Webkit layout skips
+  document.body.appendChild(container);
+
+  const bodyContent = container.querySelector('body') || container;
 
   const opt = {
     margin: [15, 15, 15, 15], // top, right, bottom, left (mm)
@@ -255,6 +268,7 @@ export const exportToPdf = async (project) => {
       scale: 2,
       useCORS: true,
       letterRendering: true,
+      logging: false
     },
     jsPDF: {
       unit: 'mm',
@@ -264,8 +278,15 @@ export const exportToPdf = async (project) => {
     pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
   };
 
-  // Direct HTML string export prevents empty canvas issues due to offscreen DOM constraints
-  await html2pdf().set(opt).from(htmlContent).save();
+  try {
+    // Wait slightly for browser layout painting
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await html2pdf().set(opt).from(bodyContent).save();
+  } catch (error) {
+    console.error('PDF Generation failed:', error);
+  } finally {
+    document.body.removeChild(container);
+  }
 };
 
 // Generates EPUB container format
@@ -290,7 +311,7 @@ export const exportToEpub = async (project) => {
   let tocItems = '';
   const oebps = zip.folder('OEBPS');
 
-  // [NEW] 2-1. Generate Title Page for EPUB so the book title shows up first
+  // Title Page
   const titlePageXml = `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko">
@@ -323,11 +344,10 @@ export const exportToEpub = async (project) => {
 </html>`;
   oebps.file('title_page.xhtml', titlePageXml);
 
-  // Manifest and Spine tracking for Title Page
   manifestItems += `    <item id="title_page" href="title_page.xhtml" media-type="application/xhtml+xml"/>\n`;
   spineItems += `    <itemref idref="title_page"/>\n`;
 
-  // Build section TOC items + chapter XHTML pages
+  // Chapters & Sections
   project.sections.forEach((sec, sIdx) => {
     const secIdx = sIdx + 1;
     const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
@@ -342,7 +362,6 @@ export const exportToEpub = async (project) => {
       spineItems += `    <itemref idref="chapter_${chapterIndex}"/>\n`;
       tocItems += `        <li><a href="${chFileName}">Chapter ${chapterIndex}. ${chTitle}</a></li>\n`;
 
-      // Parse HTML content preserving sup/sub tags, converting divs/p to xhtml paragraphs
       const rawContent = ch.content || '';
       const lines = rawContent
         .split(/<br\s*\/?>/i)
@@ -375,7 +394,7 @@ ${bodyHtml}
     tocItems += `      </ol>\n    </li>\n`;
   });
 
-  // 3. styles.css
+  // styles.css
   const stylesCss = `body {
   font-family: serif;
   line-height: 1.9;
@@ -418,7 +437,7 @@ nav#toc ol ol {
 `;
   oebps.file('styles.css', stylesCss);
 
-  // 4. toc.xhtml (Include project title at the top of TOC)
+  // toc.xhtml
   const tocXhtml = `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="ko">
@@ -438,7 +457,7 @@ ${tocItems}
 </html>`;
   oebps.file('toc.xhtml', tocXhtml);
 
-  // 5. content.opf
+  // content.opf
   const contentOpf = `<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="3.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
