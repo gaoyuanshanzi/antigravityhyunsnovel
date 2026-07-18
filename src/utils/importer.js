@@ -61,11 +61,20 @@ export const importFromHtml = (htmlString, overrideTitle) => {
       let sibling = heading.nextSibling;
 
       while (sibling && sibling !== nextHeading) {
+        // Robust escape check: If the sibling element contains or matches any heading, break immediately.
+        // This handles cases where legacy HTML parsing auto-closes nested tags and restructures headings as children of subsequent blocks.
         if (sibling.nodeType === Node.ELEMENT_NODE) {
           const siblingTagName = sibling.tagName.toUpperCase();
           
-          // Safety cutoff if another heading is encountered directly
           if (siblingTagName === 'H2' || siblingTagName === 'H3') {
+            break;
+          }
+
+          // Check if any heading in the document is nested within this sibling
+          const hasNestedHeading = headingElements.some(h => 
+            h === sibling || (sibling.contains && sibling.contains(h))
+          );
+          if (hasNestedHeading) {
             break;
           }
           
