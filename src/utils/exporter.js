@@ -377,8 +377,8 @@ export const exportToEpub = async (project) => {
 </html>`;
   oebps.file('title_page.xhtml', titlePageXml);
 
+  // title_page is added to manifest only — spine order is controlled explicitly in content.opf
   manifestItems += `    <item id="title_page" href="title_page.xhtml" media-type="application/xhtml+xml"/>\n`;
-  spineItems += `    <itemref idref="title_page"/>\n`;
 
   // Chapters & Sections
   project.sections.forEach((sec, sIdx) => {
@@ -505,6 +505,7 @@ ${tocItems}
 ${manifestItems}
   </manifest>
   <spine>
+    <itemref idref="title_page"/>
     <itemref idref="toc"/>
 ${spineItems}
   </spine>
