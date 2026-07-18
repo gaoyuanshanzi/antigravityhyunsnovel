@@ -1307,6 +1307,17 @@
 ───────────────────────────────────────────────────────────── */
 .import-modal-card {
   max-width: 580px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-bottom: 18px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-close-x {
@@ -1664,6 +1675,10 @@
 
   .modal-card {
     padding: 24px 20px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    width: 94%;
   }
 
   .export-options-grid {
