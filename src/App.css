@@ -1551,52 +1551,55 @@
   }
 
   .workspace-grid {
+    display: block !important;
     height: calc(100vh - 52px - 56px); /* subtract header and bottom nav */
-    grid-template-columns: 1fr;
     overflow: hidden;
     position: relative;
-    width: 100vw;
+    width: 100vw !important;
+    max-width: 100vw !important;
     touch-action: pan-y;
+    box-sizing: border-box !important;
   }
 
   /* Slider container holds 3 panels side-by-side */
   .mobile-panels-slider {
-    display: flex;
-    width: 300vw;
-    height: 100%;
+    display: flex !important;
+    width: 300vw !important;
+    max-width: 300vw !important;
+    height: 100% !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     touch-action: pan-y;
   }
 
   /* Each slot fills 100% of viewport width and allows scroll */
   .mobile-panel-slot {
-    display: flex;
-    flex-direction: column;
-    width: 100vw;
-    height: 100%;
-    flex-shrink: 0;
-    overflow-y: auto;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100% !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
+    box-sizing: border-box !important;
   }
 
-  /* Override center panel default width constraints */
-  .workspace-grid > .mobile-panels-slider > .mobile-panel-slot > .center-panel {
-    border-right: none;
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    overflow-y: auto;
-  }
-
-  .workspace-grid > .mobile-panels-slider > .mobile-panel-slot > .left-panel,
-  .workspace-grid > .mobile-panels-slider > .mobile-panel-slot > .right-panel {
-    border-right: none;
-    border-left: none;
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    overflow-y: auto;
+  /* Enforce panel dimensions so they occupy exactly 100% of their slot width */
+  .left-panel,
+  .center-panel,
+  .right-panel {
+    border-right: none !important;
+    border-left: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
   }
 
   /* Bottom Navigation Bar */
