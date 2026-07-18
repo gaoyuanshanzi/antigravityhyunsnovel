@@ -33,6 +33,7 @@ function App() {
   // ── Mobile panel state (0=left 1=center 2=right) ─────────
   const [activeMobilePanel, setActiveMobilePanel] = useState(0);
   const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
 
   // ── Auto-save ─────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false);
@@ -254,16 +255,26 @@ function App() {
   // ═══════════════════════════════════════════════════════════
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e) => {
-    if (touchStartX.current === null) return;
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) setActiveMobilePanel((p) => Math.min(p + 1, 2)); // swipe left → next panel
-      else          setActiveMobilePanel((p) => Math.max(p - 1, 0)); // swipe right → prev panel
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    
+    const diffX = touchStartX.current - e.changedTouches[0].clientX;
+    const diffY = touchStartY.current - e.changedTouches[0].clientY;
+    
+    // Check if horizontal movement is dominant and meets threshold (40px)
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+      if (diffX > 0) {
+        setActiveMobilePanel((p) => Math.min(p + 1, 2)); // Swipe Left -> Go Right
+      } else {
+        setActiveMobilePanel((p) => Math.max(p - 1, 0)); // Swipe Right -> Go Left
+      }
     }
+    
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   // ── Chapter select on mobile → jump to editor ──────────────
