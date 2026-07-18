@@ -100,7 +100,7 @@ export const importFromHtml = (htmlString, overrideTitle) => {
         sibling = sibling.nextSibling;
       }
 
-      currentChapter.content = collectedContent.join('<br>').trim();
+      currentChapter.content = collectedContent.join('').trim();
     }
   });
 
