@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileText, CheckCircle, AlertCircle } from 'lucide-react';
-import { importFromHtml, importFromTxt } from '../utils/importer';
+import { importFromHtml } from '../utils/importer';
 
 const ImportModal = ({ onImport, onClose }) => {
   const [titleInput, setTitleInput] = useState('');
@@ -16,8 +16,8 @@ const ImportModal = ({ onImport, onClose }) => {
     setParsedData(null);
 
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['txt', 'html', 'htm'].includes(ext)) {
-      setError('TXT 또는 HTML 파일만 가져올 수 있습니다.');
+    if (!['html', 'htm'].includes(ext)) {
+      setError('HTML 파일만 가져올 수 있습니다.');
       return;
     }
 
@@ -27,12 +27,7 @@ const ImportModal = ({ onImport, onClose }) => {
     reader.onload = (e) => {
       try {
         const content = e.target.result;
-        let parsed;
-        if (ext === 'txt') {
-          parsed = importFromTxt(content, titleInput || '');
-        } else {
-          parsed = importFromHtml(content, titleInput || '');
-        }
+        const parsed = importFromHtml(content, titleInput || '');
         setParsedData(parsed);
         if (!titleInput && parsed.title) setTitleInput(parsed.title);
       } catch (err) {
@@ -65,7 +60,7 @@ const ImportModal = ({ onImport, onClose }) => {
           <Upload className="modal-icon" size={24} />
           <div>
             <h3>소설 가져오기 (Import)</h3>
-            <p>이 서비스에서 내보낸 TXT 또는 HTML 파일을 가져옵니다.</p>
+            <p>이 서비스에서 내보낸 HTML 파일을 가져옵니다.</p>
           </div>
           <button className="modal-close-x" onClick={onClose}>
             <X size={18} />
@@ -97,7 +92,7 @@ const ImportModal = ({ onImport, onClose }) => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".txt,.html,.htm"
+            accept=".html,.htm"
             style={{ display: 'none' }}
             onChange={(e) => processFile(e.target.files[0])}
           />
@@ -111,7 +106,7 @@ const ImportModal = ({ onImport, onClose }) => {
             <>
               <Upload size={36} color="#9ca3af" />
               <p className="dropzone-prompt">파일을 드래그하거나 클릭하여 선택</p>
-              <span className="dropzone-hint">.txt · .html 파일 지원</span>
+              <span className="dropzone-hint">.html 파일 지원</span>
             </>
           )}
         </div>
