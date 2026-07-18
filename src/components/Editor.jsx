@@ -55,14 +55,14 @@ const Editor = ({
 
   // Keyboard shortcut handler
   const handleKeyDown = useCallback((e) => {
-    // Ctrl+Shift++ → Superscript (MS Word style)
-    if (e.ctrlKey && e.shiftKey && (e.key === '+' || e.key === '=')) {
+    // Ctrl+Shift++ (or Ctrl+Shift+=) → Superscript (MS Word style)
+    if (e.ctrlKey && e.shiftKey && (e.key === '+' || e.key === '=' || e.code === 'Equal')) {
       e.preventDefault();
       applyFormat('superscript');
       return;
     }
-    // Ctrl+Shift+= → Subscript
-    if (e.ctrlKey && e.shiftKey && e.key === '-') {
+    // Ctrl+Shift+- (or Ctrl+Shift+_) → Subscript (robust key check)
+    if (e.ctrlKey && e.shiftKey && (e.key === '-' || e.key === '_' || e.code === 'Minus')) {
       e.preventDefault();
       applyFormat('subscript');
       return;
