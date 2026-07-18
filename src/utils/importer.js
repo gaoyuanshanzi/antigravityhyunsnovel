@@ -51,15 +51,11 @@ export const importFromHtml = (htmlString, overrideTitle) => {
       };
       currentSection.chapters.push(currentChapter);
     } 
-    // 3. Check for Paragraph blocks (novel content)
-    else if (node.matches('p.content-block') || node.matches('p.content-paragraph') || node.tagName === 'P') {
+    // 3. Check for Chapter content blocks
+    else if (node.matches('.chapter-content-block') || node.matches('.content-body > div')) {
       if (currentChapter) {
-        const paragraphHtml = node.innerHTML;
-        if (currentChapter.content) {
-          currentChapter.content += '<br>' + paragraphHtml;
-        } else {
-          currentChapter.content = paragraphHtml;
-        }
+        // Retrieve the entire innerHTML directly (retains all tags, br, div, sup, sub formatting)
+        currentChapter.content = node.innerHTML;
       }
     }
   });

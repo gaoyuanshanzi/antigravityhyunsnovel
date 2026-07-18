@@ -185,13 +185,12 @@ const buildBookHtml = (project, forPdf = false) => {
     .toc-list a:hover {
       text-decoration: underline;
     }
-    .content-block {
-      margin-bottom: 1.4em;
-      text-indent: 1em;
+    .chapter-content-block {
+      margin-bottom: 2em;
       text-align: justify;
       color: #1f2937;
       font-size: 1.02rem;
-      white-space: pre-wrap;
+      line-height: 1.9;
     }
     sup {
       font-size: 0.75em;
@@ -244,15 +243,7 @@ ${project.sections.map((sec, sIdx) => {
       const chTitle = cleanTitle('Chapter', chapterIndex, ch.title) || `챕터 ${chapterIndex}`;
       const chId = `ch-${ch.id}`;
       const rawContent = ch.content || '';
-      // Split content into paragraph tags correctly while preserving formatting
-      const lines = rawContent
-        .split(/<br\s*\/?>/i)
-        .map(line => line.trim())
-        .filter(line => line !== '' && line !== '<div>' && line !== '</div>');
-      const paragraphsHtml = lines.length
-        ? lines.map(line => `      <p class="content-block">${line}</p>`).join('\n')
-        : `      <p class="content-block"></p>`;
-      return `      <h3 class="chapter-heading" id="${chId}">Chapter ${chapterIndex}. ${chTitle}</h3>\n${paragraphsHtml}`;
+      return `      <h3 class="chapter-heading" id="${chId}">Chapter ${chapterIndex}. ${chTitle}</h3>\n      <div class="chapter-content-block">${rawContent}</div>`;
     }).join('\n');
 }).join('\n')}
     </div>
