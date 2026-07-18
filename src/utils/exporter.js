@@ -219,7 +219,6 @@ ${project.sections.map((sec, sIdx) => {
       const chId = `ch-${ch.id}`;
       // Parse HTML content into paragraphs — preserve sup/sub tags
       const rawContent = ch.content || '';
-      // Split by line breaks to create paragraph divs
       const lines = rawContent
         .split(/<br\s*\/?>/i)
         .map(line => line.trim())
@@ -243,21 +242,10 @@ export const exportToHtml = (project) => {
   downloadBlob(blob, `${project.title || '소설'}.html`);
 };
 
-// Generates PDF using html2pdf.js
+// Generates PDF using html2pdf.js (Directly rendering HTML string inside the iframe)
 export const exportToPdf = async (project) => {
   const html2pdf = (await import('html2pdf.js')).default;
   const htmlContent = buildBookHtml(project, true);
-
-  // Create a temporary container with the HTML
-  const container = document.createElement('div');
-  container.innerHTML = htmlContent;
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.top = '0';
-  document.body.appendChild(container);
-
-  // Extract just the body content
-  const bodyContent = container.querySelector('body') || container;
 
   const opt = {
     margin: [15, 15, 15, 15], // top, right, bottom, left (mm)
@@ -276,11 +264,8 @@ export const exportToPdf = async (project) => {
     pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
   };
 
-  try {
-    await html2pdf().set(opt).from(bodyContent).save();
-  } finally {
-    document.body.removeChild(container);
-  }
+  // Direct HTML string export prevents empty canvas issues due to offscreen DOM constraints
+  await html2pdf().set(opt).from(htmlContent).save();
 };
 
 // Generates EPUB container format
@@ -305,6 +290,44 @@ export const exportToEpub = async (project) => {
   let tocItems = '';
   const oebps = zip.folder('OEBPS');
 
+  // [NEW] 2-1. Generate Title Page for EPUB so the book title shows up first
+  const titlePageXml = `<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko">
+<head>
+  <title>${project.title || '소설'}</title>
+  <link rel="stylesheet" type="text/css" href="styles.css"/>
+  <style>
+    .title-page-container {
+      text-align: center;
+      margin-top: 30%;
+    }
+    .book-title-header {
+      font-size: 2.2em;
+      font-weight: bold;
+      margin-bottom: 24px;
+      color: #111;
+    }
+    .book-author-meta {
+      font-size: 1.1em;
+      color: #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <div class="title-page-container">
+    <h1 class="book-title-header">${project.title || '소설 제목 없음'}</h1>
+    <p class="book-author-meta">저자: admin</p>
+  </div>
+</body>
+</html>`;
+  oebps.file('title_page.xhtml', titlePageXml);
+
+  // Manifest and Spine tracking for Title Page
+  manifestItems += `    <item id="title_page" href="title_page.xhtml" media-type="application/xhtml+xml"/>\n`;
+  spineItems += `    <itemref idref="title_page"/>\n`;
+
+  // Build section TOC items + chapter XHTML pages
   project.sections.forEach((sec, sIdx) => {
     const secIdx = sIdx + 1;
     const secTitle = cleanTitle('Section', secIdx, sec.title) || `섹션 ${secIdx}`;
@@ -395,17 +418,18 @@ nav#toc ol ol {
 `;
   oebps.file('styles.css', stylesCss);
 
-  // 4. toc.xhtml
+  // 4. toc.xhtml (Include project title at the top of TOC)
   const tocXhtml = `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="ko">
 <head>
-  <title>목차</title>
+  <title>${project.title || '소설'} - 목차</title>
   <link rel="stylesheet" type="text/css" href="styles.css"/>
 </head>
 <body>
   <nav epub:type="toc" id="toc">
-    <h1>목차</h1>
+    <h1>${project.title || '소설'}</h1>
+    <h2>목차</h2>
     <ol>
 ${tocItems}
     </ol>
