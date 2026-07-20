@@ -103,7 +103,7 @@
 /* 3-Panel Main Layout Grid — center panel narrower, editor gets the remaining space */
 .workspace-grid {
   display: grid;
-  grid-template-columns: 220px 520px 1fr;
+  grid-template-columns: 240px 420px 1fr;
   flex: 1;
   height: calc(100vh - 60px);
   overflow: hidden; /* horizontal hidden, vertical handled per-panel */
