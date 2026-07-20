@@ -103,7 +103,7 @@
 /* 3-Panel Main Layout Grid — center panel narrower, editor gets the remaining space */
 .workspace-grid {
   display: grid;
-  grid-template-columns: 240px 420px 1fr;
+  grid-template-columns: 220px 520px 1fr;
   flex: 1;
   height: calc(100vh - 60px);
   overflow: hidden; /* horizontal hidden, vertical handled per-panel */
@@ -476,13 +476,14 @@
   position: relative;
   flex: 1 1 0;         /* grow to fill, but shrink if needed */
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
   padding: 20px 16px;
   overflow-y: auto;    /* allow vertical scroll when content taller than panel */
-  overflow-x: hidden;
+  overflow-x: auto;    /* enable horizontal scrollbar */
   gap: 24px;
   min-height: 0;       /* critical: lets flexbox shrink so parent height stays fixed */
   -webkit-overflow-scrolling: touch; /* smooth iOS momentum scroll */
+  transform: rotateX(180deg);
 }
 
 /* SVG Connection Layer behind nodes */
@@ -494,6 +495,7 @@
   height: 100%;
   pointer-events: none;
   z-index: 1;
+  transform: rotateX(180deg);
 }
 
 .connector-line {
@@ -519,6 +521,7 @@
   position: relative;
   justify-content: flex-start;
   padding-top: 14px;
+  transform: rotateX(180deg);
 }
 
 .root-column {
