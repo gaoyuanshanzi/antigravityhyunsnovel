@@ -192,15 +192,30 @@ const MindMap = ({
               <span className="node-tag">Novel Title</span>
               <span className="node-title">{project.title}</span>
             </div>
+            {/* Top add button (위쪽에 추가) */}
             <button
-              className="node-add-btn"
-              title="섹션 추가"
+              className="node-add-btn node-add-btn-top"
+              title="맨 위에 섹션 추가"
               onClick={() => {
                 const count = project.sections.length + 1;
-                onAddSection(`섹션 ${count}`);
+                onAddSection(`섹션 ${count}`, 'top');
               }}
             >
-              <Plus size={16} />
+              <Plus size={10} />
+              <span className="add-indicator-top">↑</span>
+            </button>
+
+            {/* Bottom add button (아래쪽에 추가) */}
+            <button
+              className="node-add-btn node-add-btn-bottom"
+              title="맨 아래에 섹션 추가"
+              onClick={() => {
+                const count = project.sections.length + 1;
+                onAddSection(`섹션 ${count}`, 'bottom');
+              }}
+            >
+              <Plus size={10} />
+              <span className="add-indicator-bottom">↓</span>
             </button>
           </div>
         </div>
@@ -259,17 +274,32 @@ const MindMap = ({
                         <Trash2 size={12} />
                       </button>
                     </div>
+                    {/* Top add button (위쪽에 추가) */}
                     <button
-                      className="node-add-btn"
-                      title="챕터 추가"
+                      className="node-add-btn node-add-btn-top"
+                      title="맨 위에 챕터 추가"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Use global chapter count for new chapter name
                         const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
-                        onAddChapter(sec.id, `챕터 ${totalChapters + 1}`);
+                        onAddChapter(sec.id, `챕터 ${totalChapters + 1}`, 'top');
                       }}
                     >
-                      <Plus size={16} />
+                      <Plus size={10} />
+                      <span className="add-indicator-top">↑</span>
+                    </button>
+
+                    {/* Bottom add button (아래쪽에 추가) */}
+                    <button
+                      className="node-add-btn node-add-btn-bottom"
+                      title="맨 아래에 챕터 추가"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
+                        onAddChapter(sec.id, `챕터 ${totalChapters + 1}`, 'bottom');
+                      }}
+                    >
+                      <Plus size={10} />
+                      <span className="add-indicator-bottom">↓</span>
                     </button>
                   </>
                 )}

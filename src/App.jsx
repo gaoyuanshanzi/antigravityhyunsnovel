@@ -151,17 +151,21 @@ function App() {
   // ═══════════════════════════════════════════════════════════
   // SECTION ACTIONS
   // ═══════════════════════════════════════════════════════════
-  const handleAddSection = (sectionTitle) => {
+  const handleAddSection = (sectionTitle, position = 'bottom') => {
     if (!activeProjectId) return;
     setProjects(projects.map((p) => {
       if (p.id !== activeProjectId) return p;
+      const newSection = {
+        id: `sec-${Date.now()}`,
+        title: sectionTitle,
+        chapters: [{ id: `ch-${Date.now()}`, title: '챕터 1', content: '' }]
+      };
+      const updatedSections = position === 'top'
+        ? [newSection, ...p.sections]
+        : [...p.sections, newSection];
       return {
         ...p,
-        sections: [...p.sections, {
-          id: `sec-${Date.now()}`,
-          title: sectionTitle,
-          chapters: [{ id: `ch-${Date.now()}`, title: '챕터 1', content: '' }]
-        }]
+        sections: updatedSections
       };
     }));
   };
@@ -190,16 +194,20 @@ function App() {
   // ═══════════════════════════════════════════════════════════
   // CHAPTER ACTIONS
   // ═══════════════════════════════════════════════════════════
-  const handleAddChapter = (secId, chapterTitle) => {
+  const handleAddChapter = (secId, chapterTitle, position = 'bottom') => {
     if (!activeProjectId) return;
     const newChId = `ch-${Date.now()}`;
+    const newChapter = { id: newChId, title: chapterTitle, content: '' };
     setProjects(projects.map((p) => {
       if (p.id !== activeProjectId) return p;
       return {
         ...p,
         sections: p.sections.map((sec) => {
           if (sec.id !== secId) return sec;
-          return { ...sec, chapters: [...sec.chapters, { id: newChId, title: chapterTitle, content: '' }] };
+          const updatedChapters = position === 'top'
+            ? [newChapter, ...sec.chapters]
+            : [...sec.chapters, newChapter];
+          return { ...sec, chapters: updatedChapters };
         })
       };
     }));

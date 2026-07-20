@@ -586,14 +586,12 @@
   text-overflow: ellipsis;
 }
 
-/* Plus Add Buttons on right edge of nodes */
+/* Base style for directional add buttons */
 .node-add-btn {
   position: absolute;
   right: -14px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: white;
   border: 1.5px solid var(--primary);
@@ -601,18 +599,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 0;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(79,70,229,0.15);
   transition: all 0.2s ease;
   z-index: 5;
   font-family: inherit;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Top variant — positioned at upper-right edge */
+.node-add-btn-top {
+  top: 4px;
+  transform: none;
+}
+
+/* Bottom variant — positioned at lower-right edge */
+.node-add-btn-bottom {
+  bottom: 4px;
+  transform: none;
+}
+
+/* Arrow text indicator inside button */
+.add-indicator-top,
+.add-indicator-bottom {
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 700;
 }
 
 .node-add-btn:hover {
   background: var(--primary);
   color: white;
-  transform: translateY(-50%) scale(1.12);
   box-shadow: 0 4px 12px var(--primary-glow);
+  transform: scale(1.15);
+}
+
+/* Keep top/bottom separate transforms on hover */
+.node-add-btn-top:hover {
+  transform: scale(1.15);
+}
+
+.node-add-btn-bottom:hover {
+  transform: scale(1.15);
 }
 
 /* Action menus inside nodes (edit, delete) */
@@ -1719,12 +1750,20 @@
     font-size: 0.58rem;
   }
 
-  /* Add button stays visible but smaller */
+  /* Add buttons stay visible but smaller on mobile */
   .node-add-btn {
-    width: 24px;
-    height: 24px;
-    right: -8px;
-    font-size: 14px;
+    width: 20px;
+    height: 20px;
+    right: -6px;
+    font-size: 10px;
+  }
+
+  .node-add-btn-top {
+    top: 2px;
+  }
+
+  .node-add-btn-bottom {
+    bottom: 2px;
   }
 
   /* Hide SVG connector layer on mobile — not needed in stacked view */
