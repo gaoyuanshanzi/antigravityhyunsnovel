@@ -300,58 +300,60 @@ function App() {
     <div className="workspace-app">
       {/* ── Top Navbar ── */}
       <header className="workspace-navbar">
-        <div className="navbar-left">
-          <Sparkles className="navbar-logo" size={24} />
-          <h1>Novel Studio <span className="version-tag">Pro</span></h1>
-        </div>
-        <div className="navbar-actions">
-          <button
-            className="navbar-btn import-btn"
-            onClick={() => setShowImportModal(true)}
-          >
-            <FolderOpen size={16} />
-            <span className="navbar-btn-label">가져오기</span>
-          </button>
-          {activeProject && (
+        <div className="navbar-top-row">
+          <div className="navbar-left">
+            <Sparkles className="navbar-logo" size={24} />
+            <h1>Novel Studio <span className="version-tag">Pro</span></h1>
+          </div>
+          <div className="navbar-actions">
             <button
-              className="navbar-btn export-btn"
-              onClick={() => setShowExportModal(true)}
+              className="navbar-btn import-btn"
+              onClick={() => setShowImportModal(true)}
             >
-              <Download size={16} />
-              <span className="navbar-btn-label">내보내기</span>
+              <FolderOpen size={16} />
+              <span className="navbar-btn-label">가져오기</span>
             </button>
-          )}
-          <button className="navbar-btn logout-btn-top" onClick={handleLogout}>
-            <LogOut size={16} />
-            <span className="navbar-btn-label">로그아웃</span>
-          </button>
+            {activeProject && (
+              <button
+                className="navbar-btn export-btn"
+                onClick={() => setShowExportModal(true)}
+              >
+                <Download size={16} />
+                <span className="navbar-btn-label">내보내기</span>
+              </button>
+            )}
+            <button className="navbar-btn logout-btn-top" onClick={handleLogout}>
+              <LogOut size={16} />
+              <span className="navbar-btn-label">로그아웃</span>
+            </button>
+          </div>
         </div>
-      </header>
 
-      {/* ── Mobile Top Navigation Tabs (Sticky below header) ── */}
-      <nav className="mobile-top-tabs">
-        <button
-          className={`mobile-tab-btn ${activeMobilePanel === 0 ? 'active' : ''}`}
-          onClick={() => setActiveMobilePanel(0)}
-        >
-          <List size={16} />
-          <span>소설 목록</span>
-        </button>
-        <button
-          className={`mobile-tab-btn ${activeMobilePanel === 1 ? 'active' : ''}`}
-          onClick={() => setActiveMobilePanel(1)}
-        >
-          <GitCommit size={16} />
-          <span>목차 마인드맵</span>
-        </button>
-        <button
-          className={`mobile-tab-btn ${activeMobilePanel === 2 ? 'active' : ''}`}
-          onClick={() => setActiveMobilePanel(2)}
-        >
-          <BookOpen size={16} />
-          <span>본문 에디터</span>
-        </button>
-      </nav>
+        {/* ── Mobile Top Navigation Tabs (Nested inside header) ── */}
+        <nav className="mobile-top-tabs">
+          <button
+            className={`mobile-tab-btn ${activeMobilePanel === 0 ? 'active' : ''}`}
+            onClick={() => setActiveMobilePanel(0)}
+          >
+            <List size={16} />
+            <span>소설 목록</span>
+          </button>
+          <button
+            className={`mobile-tab-btn ${activeMobilePanel === 1 ? 'active' : ''}`}
+            onClick={() => setActiveMobilePanel(1)}
+          >
+            <GitCommit size={16} />
+            <span>목차 마인드맵</span>
+          </button>
+          <button
+            className={`mobile-tab-btn ${activeMobilePanel === 2 ? 'active' : ''}`}
+            onClick={() => setActiveMobilePanel(2)}
+          >
+            <BookOpen size={16} />
+            <span>본문 에디터</span>
+          </button>
+        </nav>
+      </header>
 
       {/* ── Main 3-Panel Grid ── */}
       <main

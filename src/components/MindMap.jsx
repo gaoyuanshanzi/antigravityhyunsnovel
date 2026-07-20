@@ -12,8 +12,10 @@ const MindMap = ({
   onRenameChapter,
   onDeleteChapter
 }) => {
-  const containerRef = useRef(null);
+  const containerRef = useRef(null);   // now on .mindmap-workspace
+  const workspaceRef = useRef(null);   // alias for scroll handling
   const [connections, setConnections] = useState([]);
+  const [contentHeight, setContentHeight] = useState(0);
   
   // States for inline editing
   const [editingNode, setEditingNode] = useState(null); // { type: 'section'|'chapter', id, value }
@@ -33,55 +35,58 @@ const MindMap = ({
   }
 
   // Calculate coordinates for SVG connecting lines
+  // Coordinates are relative to the mindmap-workspace, accounting for scrollTop
   const updateConnections = () => {
-    if (!containerRef.current || !project) return;
-    const container = containerRef.current;
-    const containerRect = container.getBoundingClientRect();
+    const workspace = containerRef.current;
+    if (!workspace || !project) return;
+
+    const workspaceRect = workspace.getBoundingClientRect();
+    const scrollTop = workspace.scrollTop;
+    const scrollLeft = workspace.scrollLeft;
+
+    // Track the tallest rendered content so SVG covers it
+    setContentHeight(workspace.scrollHeight);
 
     const rootEl = document.getElementById('node-root');
     const newConnections = [];
 
     if (rootEl) {
       const rootRect = rootEl.getBoundingClientRect();
-      const rootX = rootRect.right - containerRect.left;
-      const rootY = rootRect.top + rootRect.height / 2 - containerRect.top;
+      const rootX = rootRect.right - workspaceRect.left + scrollLeft;
+      const rootY = rootRect.top + rootRect.height / 2 - workspaceRect.top + scrollTop;
 
       project.sections.forEach((sec) => {
         const secEl = document.getElementById(`node-sec-${sec.id}`);
         if (secEl) {
           const secRect = secEl.getBoundingClientRect();
-          const secLeftX = secRect.left - containerRect.left;
-          const secLeftY = secRect.top + secRect.height / 2 - containerRect.top;
-          
+          const secLeftX = secRect.left - workspaceRect.left + scrollLeft;
+          const secLeftY = secRect.top + secRect.height / 2 - workspaceRect.top + scrollTop;
+
           const isSecActive = activeSectionId === sec.id;
 
           newConnections.push({
             id: `root-to-${sec.id}`,
-            x1: rootX,
-            y1: rootY,
-            x2: secLeftX,
-            y2: secLeftY,
+            x1: rootX, y1: rootY,
+            x2: secLeftX, y2: secLeftY,
             active: isSecActive
           });
 
-          const secRightX = secRect.right - containerRect.left;
-          const secRightY = secRect.top + secRect.height / 2 - containerRect.top;
+          const secRightX = secRect.right - workspaceRect.left + scrollLeft;
+          const secRightY = secRect.top + secRect.height / 2 - workspaceRect.top + scrollTop;
 
           sec.chapters.forEach((ch) => {
             const chEl = document.getElementById(`node-ch-${ch.id}`);
             if (chEl) {
               const chRect = chEl.getBoundingClientRect();
-              const chLeftX = chRect.left - containerRect.left;
-              const chLeftY = chRect.top + chRect.height / 2 - containerRect.top;
-              
+              const chLeftX = chRect.left - workspaceRect.left + scrollLeft;
+              const chLeftY = chRect.top + chRect.height / 2 - workspaceRect.top + scrollTop;
+
               const isChActive = activeChapterId === ch.id;
 
               newConnections.push({
                 id: `sec-${sec.id}-to-ch-${ch.id}`,
-                x1: secRightX,
-                y1: secRightY,
-                x2: chLeftX,
-                y2: chLeftY,
+                x1: secRightX, y1: secRightY,
+                x2: chLeftX, y2: chLeftY,
                 active: isChActive
               });
             }
@@ -92,19 +97,23 @@ const MindMap = ({
     setConnections(newConnections);
   };
 
-  // Re-run connection update when project structure changes, active selection changes, or window resizes
+  // Re-run on structure/selection changes and scroll/resize
   useEffect(() => {
     updateConnections();
-    
-    // Add small delay to ensure DOM is fully painted
     const timer = setTimeout(updateConnections, 50);
 
+    const workspace = containerRef.current;
     window.addEventListener('resize', updateConnections);
-    
-    // Cleanup
+    if (workspace) {
+      workspace.addEventListener('scroll', updateConnections);
+    }
+
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', updateConnections);
+      if (workspace) {
+        workspace.removeEventListener('scroll', updateConnections);
+      }
     };
   }, [project, activeChapterId, activeSectionId, clickedSectionId]);
 
@@ -139,7 +148,7 @@ const MindMap = ({
   };
 
   return (
-    <div className="center-panel" ref={containerRef}>
+    <div className="center-panel">
       <div className="panel-header">
         <div className="panel-title-wrapper">
           <GitCommit className="panel-title-icon" size={20} />
@@ -152,9 +161,12 @@ const MindMap = ({
         </div>
       </div>
 
-      <div className="mindmap-workspace">
-        {/* Dynamic SVG Connection Layer */}
-        <svg className="mindmap-svg-layer">
+      <div className="mindmap-workspace" ref={containerRef}>
+        {/* Dynamic SVG Connection Layer — covers full scrollable content */}
+        <svg
+          className="mindmap-svg-layer"
+          style={{ height: contentHeight > 0 ? contentHeight : '100%' }}
+        >
           {connections.map((conn) => {
             // Cubic Bezier curve paths for smooth organic connection lines
             const dx = Math.abs(conn.x2 - conn.x1) * 0.5;
