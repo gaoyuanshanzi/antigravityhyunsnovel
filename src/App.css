@@ -861,10 +861,13 @@
 
 .editor-workspace {
   flex: 1;
+  min-height: 0;           /* allows the flex child to shrink below its content size */
   padding: 24px 36px 28px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;        /* THIS is the scroll container for the editor text */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Editor Toolbar */
@@ -943,7 +946,7 @@
   color: #1f2937;
   padding: 0;
   min-height: 200px;
-  overflow-y: auto;
+  overflow: visible;       /* let the parent .editor-workspace handle scrolling */
   text-align: justify;
 }
 
