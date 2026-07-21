@@ -476,14 +476,13 @@
   position: relative;
   flex: 1 1 0;         /* grow to fill, but shrink if needed */
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-  padding: 20px 16px;
-  overflow-y: auto;    /* allow vertical scroll when content taller than panel */
-  overflow-x: auto;    /* enable horizontal scrollbar */
-  gap: 24px;
-  min-height: 0;       /* critical: lets flexbox shrink so parent height stays fixed */
-  -webkit-overflow-scrolling: touch; /* smooth iOS momentum scroll */
-  transform: rotateX(180deg);
+  grid-template-columns: 1fr 1fr 1fr; /* 3 equal columns fit exactly in 420px panel */
+  padding: 12px 10px;
+  overflow-y: auto;    /* vertical scroll for tall content */
+  overflow-x: hidden;  /* no horizontal scrolling needed */
+  gap: 10px;
+  min-height: 0;       /* lets flexbox shrink so parent height stays fixed */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* SVG Connection Layer behind nodes */
@@ -495,7 +494,6 @@
   height: 100%;
   pointer-events: none;
   z-index: 1;
-  transform: rotateX(180deg);
 }
 
 .connector-line {
@@ -516,12 +514,11 @@
 .mindmap-column {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 10px;
   z-index: 2;
   position: relative;
   justify-content: flex-start;
-  padding-top: 14px;
-  transform: rotateX(180deg);
+  padding-top: 6px;
 }
 
 .root-column {
@@ -529,48 +526,49 @@
   padding-top: 0;
 }
 
-/* Mind Map Nodes Styling */
+/* Mind Map Nodes Styling - Compact for 1-window view */
 .mindmap-node {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.09);
-  border-radius: var(--node-radius);
-  padding: 10px 12px;
+  border-radius: 8px;
+  padding: 6px 8px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 60px;
+  min-height: 42px;
   user-select: none;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .mindmap-node:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   border-color: rgba(79, 70, 229, 0.3);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .mindmap-node.highlighted {
   border-color: var(--primary);
   background: #eef2ff;
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+  box-shadow: 0 0 0 2px rgba(79,70,229,0.15);
 }
 
 .node-content {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 1px;
   flex: 1;
   overflow: hidden;
 }
 
 .node-tag {
-  font-size: 0.6rem;
+  font-size: 0.52rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .root-node .node-tag { color: var(--accent); }
@@ -578,7 +576,7 @@
 .chapter-node .node-tag { color: var(--secondary); }
 
 .node-title {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -586,15 +584,15 @@
   text-overflow: ellipsis;
 }
 
-/* Base style for directional add buttons */
+/* Base style for directional add buttons - Compact */
 .node-add-btn {
   position: absolute;
-  right: -14px;
-  width: 24px;
-  height: 24px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: white;
-  border: 1.5px solid var(--primary);
+  border: 1px solid var(--primary);
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -602,7 +600,7 @@
   flex-direction: column;
   gap: 0;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(79,70,229,0.15);
+  box-shadow: 0 1px 5px rgba(79,70,229,0.18);
   transition: all 0.2s ease;
   z-index: 5;
   font-family: inherit;
@@ -612,28 +610,28 @@
 
 /* Top variant — positioned at upper-right edge */
 .node-add-btn-top {
-  top: 4px;
+  top: 2px;
   transform: none;
 }
 
 /* Bottom variant — positioned at lower-right edge */
 .node-add-btn-bottom {
-  bottom: 4px;
+  bottom: 2px;
   transform: none;
 }
 
 /* Arrow text indicator inside button */
 .add-indicator-top,
 .add-indicator-bottom {
-  font-size: 7px;
+  font-size: 6px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .node-add-btn:hover {
   background: var(--primary);
   color: white;
-  box-shadow: 0 4px 12px var(--primary-glow);
+  box-shadow: 0 2px 8px var(--primary-glow);
   transform: scale(1.15);
 }
 
