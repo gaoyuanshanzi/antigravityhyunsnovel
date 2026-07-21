@@ -220,159 +220,160 @@ const MindMap = ({
           </div>
         </div>
 
-        {/* Column 2: Sections */}
-        <div className="mindmap-column section-column">
-          {project.sections.map((sec, sIdx) => {
-            const isSelected = activeSectionId === sec.id;
-            const isEditing = editingNode?.type === 'section' && editingNode?.id === sec.id;
-
-            return (
-              <div
-                key={sec.id}
-                id={`node-sec-${sec.id}`}
-                className={`mindmap-node section-node ${isSelected ? 'highlighted' : ''}`}
-                onClick={() => setClickedSectionId(sec.id)}
-              >
-                {isEditing ? (
-                  <div className="node-edit-form" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="text"
-                      value={editingNode.value}
-                      onChange={(e) => setEditingNode({ ...editingNode, value: e.target.value })}
-                      autoFocus
-                      onBlur={handleEditSubmit}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleEditSubmit();
-                        if (e.key === 'Escape') setEditingNode(null);
-                      }}
-                    />
-                    <button onClick={handleEditSubmit} className="btn-confirm"><Check size={12} /></button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="node-content">
-                      <span className="node-tag">Section {sIdx + 1}</span>
-                      <span className="node-title">{sec.title || `섹션 ${sIdx + 1}`}</span>
-                    </div>
-                    <div className="node-actions" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="node-action-icon"
-                        title="이름 수정"
-                        onClick={() => startEditing('section', sec.id, sec.title)}
-                      >
-                        <Edit2 size={12} />
-                      </button>
-                      <button
-                        className="node-action-icon delete"
-                        title="섹션 삭제"
-                        onClick={() => {
-                          if (confirm(`'${sec.title}' 섹션과 이에 속한 모든 챕터를 삭제하시겠습니까?`)) {
-                            onDeleteSection(sec.id);
-                          }
-                        }}
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                    {/* Top add button (위쪽에 추가) */}
-                    <button
-                      className="node-add-btn node-add-btn-top"
-                      title="맨 위에 챕터 추가"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
-                        onAddChapter(sec.id, `챕터 ${totalChapters + 1}`, 'top');
-                      }}
-                    >
-                      <Plus size={10} />
-                      <span className="add-indicator-top">↑</span>
-                    </button>
-
-                    {/* Bottom add button (아래쪽에 추가) */}
-                    <button
-                      className="node-add-btn node-add-btn-bottom"
-                      title="맨 아래에 챕터 추가"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
-                        onAddChapter(sec.id, `챕터 ${totalChapters + 1}`, 'bottom');
-                      }}
-                    >
-                      <Plus size={10} />
-                      <span className="add-indicator-bottom">↓</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Column 3: Chapters — using global chapter numbers across all sections */}
-        <div className="mindmap-column chapter-column">
+        {/* Sections & Chapters Grouped Tree Container */}
+        <div className="mindmap-tree-container">
           {(() => {
             let globalChIdx = 1;
-            return project.sections.map((sec) => {
-              return sec.chapters.map((ch) => {
-                const thisGlobalIdx = globalChIdx++;
-                const isSelected = activeChapterId === ch.id;
-                const isEditing = editingNode?.type === 'chapter' && editingNode?.id === ch.id;
-                const isParentSecActive = activeSectionId === sec.id;
+            return project.sections.map((sec, sIdx) => {
+              const isSecSelected = activeSectionId === sec.id;
+              const isSecEditing = editingNode?.type === 'section' && editingNode?.id === sec.id;
 
-                return (
-                  <div
-                    key={ch.id}
-                    id={`node-ch-${ch.id}`}
-                    className={`mindmap-node chapter-node ${isSelected ? 'highlighted' : ''} ${isParentSecActive ? 'parent-active' : 'parent-inactive'}`}
-                    onClick={() => onSelectChapter(ch.id)}
-                  >
-                    {isEditing ? (
-                      <div className="node-edit-form" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="text"
-                          value={editingNode.value}
-                          onChange={(e) => setEditingNode({ ...editingNode, value: e.target.value })}
-                          autoFocus
-                          onBlur={handleEditSubmit}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleEditSubmit();
-                            if (e.key === 'Escape') setEditingNode(null);
-                          }}
-                        />
-                        <button onClick={handleEditSubmit} className="btn-confirm"><Check size={12} /></button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="node-content">
-                          <span className="node-tag">Chapter {thisGlobalIdx}</span>
-                          <span className="node-title">{ch.title || `챕터 ${thisGlobalIdx}`}</span>
+              return (
+                <div key={sec.id} className="mindmap-section-group">
+                  {/* Section Node Wrapper — aligns with first chapter */}
+                  <div className="section-node-wrapper">
+                    <div
+                      id={`node-sec-${sec.id}`}
+                      className={`mindmap-node section-node ${isSecSelected ? 'highlighted' : ''}`}
+                      onClick={() => setClickedSectionId(sec.id)}
+                    >
+                      {isSecEditing ? (
+                        <div className="node-edit-form" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="text"
+                            value={editingNode.value}
+                            onChange={(e) => setEditingNode({ ...editingNode, value: e.target.value })}
+                            autoFocus
+                            onBlur={handleEditSubmit}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleEditSubmit();
+                              if (e.key === 'Escape') setEditingNode(null);
+                            }}
+                          />
+                          <button onClick={handleEditSubmit} className="btn-confirm"><Check size={12} /></button>
                         </div>
-                        <div className="node-actions" onClick={(e) => e.stopPropagation()}>
+                      ) : (
+                        <>
+                          <div className="node-content">
+                            <span className="node-tag">Section {sIdx + 1}</span>
+                            <span className="node-title">{sec.title || `섹션 ${sIdx + 1}`}</span>
+                          </div>
+                          <div className="node-actions" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="node-action-icon"
+                              title="이름 수정"
+                              onClick={() => startEditing('section', sec.id, sec.title)}
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                            <button
+                              className="node-action-icon delete"
+                              title="섹션 삭제"
+                              onClick={() => {
+                                if (confirm(`'${sec.title}' 섹션과 이에 속한 모든 챕터를 삭제하시겠습니까?`)) {
+                                  onDeleteSection(sec.id);
+                                }
+                              }}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                          {/* Top add button (위쪽에 챕터 추가) */}
                           <button
-                            className="node-action-icon"
-                            title="이름 수정"
-                            onClick={() => startEditing('chapter', ch.id, ch.title)}
-                          >
-                            <Edit2 size={12} />
-                          </button>
-                          <button
-                            className="node-action-icon delete"
-                            title="챕터 삭제"
-                            onClick={() => {
-                              if (confirm(`'${ch.title}' 챕터를 삭제하시겠습니까?`)) {
-                                onDeleteChapter(sec.id, ch.id);
-                              }
+                            className="node-add-btn node-add-btn-top"
+                            title="맨 위에 챕터 추가"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
+                              onAddChapter(sec.id, `챕터 ${totalChapters + 1}`, 'top');
                             }}
                           >
-                            <Trash2 size={12} />
+                            <Plus size={10} />
+                            <span className="add-indicator-top">↑</span>
                           </button>
-                        </div>
-                        {/* Leaf Node: NO add button here */}
-                      </>
-                    )}
+
+                          {/* Bottom add button (아래쪽에 챕터 추가) */}
+                          <button
+                            className="node-add-btn node-add-btn-bottom"
+                            title="맨 아래에 챕터 추가"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
+                              onAddChapter(sec.id, `챕터 ${totalChapters + 1}`, 'bottom');
+                            }}
+                          >
+                            <Plus size={10} />
+                            <span className="add-indicator-bottom">↓</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                );
-              });
+
+                  {/* Chapters Column for this specific section */}
+                  <div className="chapters-group-column">
+                    {sec.chapters.map((ch) => {
+                      const thisGlobalIdx = globalChIdx++;
+                      const isChSelected = activeChapterId === ch.id;
+                      const isChEditing = editingNode?.type === 'chapter' && editingNode?.id === ch.id;
+                      const isParentSecActive = activeSectionId === sec.id;
+
+                      return (
+                        <div
+                          key={ch.id}
+                          id={`node-ch-${ch.id}`}
+                          className={`mindmap-node chapter-node ${isChSelected ? 'highlighted' : ''} ${isParentSecActive ? 'parent-active' : 'parent-inactive'}`}
+                          onClick={() => onSelectChapter(ch.id)}
+                        >
+                          {isChEditing ? (
+                            <div className="node-edit-form" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="text"
+                                value={editingNode.value}
+                                onChange={(e) => setEditingNode({ ...editingNode, value: e.target.value })}
+                                autoFocus
+                                onBlur={handleEditSubmit}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleEditSubmit();
+                                  if (e.key === 'Escape') setEditingNode(null);
+                                }}
+                              />
+                              <button onClick={handleEditSubmit} className="btn-confirm"><Check size={12} /></button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="node-content">
+                                <span className="node-tag">Chapter {thisGlobalIdx}</span>
+                                <span className="node-title">{ch.title || `챕터 ${thisGlobalIdx}`}</span>
+                              </div>
+                              <div className="node-actions" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  className="node-action-icon"
+                                  title="이름 수정"
+                                  onClick={() => startEditing('chapter', ch.id, ch.title)}
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                                <button
+                                  className="node-action-icon delete"
+                                  title="챕터 삭제"
+                                  onClick={() => {
+                                    if (confirm(`'${ch.title}' 챕터를 삭제하시겠습니까?`)) {
+                                      onDeleteChapter(sec.id, ch.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
             });
           })()}
         </div>

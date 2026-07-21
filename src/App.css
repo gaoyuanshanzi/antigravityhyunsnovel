@@ -476,7 +476,7 @@
   position: relative;
   flex: 1 1 0;         /* grow to fill, but shrink if needed */
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr; /* 3 equal columns fit exactly in 420px panel */
+  grid-template-columns: 1fr 2fr; /* Left: Root novel title node (1fr), Right: Tree container (2fr) */
   padding: 12px 10px;
   overflow-y: auto;    /* vertical scroll for tall content */
   overflow-x: hidden;  /* no horizontal scrolling needed */
@@ -522,8 +522,37 @@
 }
 
 .root-column {
-  justify-content: center;
-  padding-top: 0;
+  justify-content: flex-start;
+  padding-top: 6px;
+}
+
+/* Tree container holding all section-chapter groups */
+.mindmap-tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 2;
+  position: relative;
+}
+
+/* Individual Section Group: Section Node (left) + its Chapters (right) */
+.mindmap-section-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* Wrapper for section node — automatically aligns with the top of its first chapter */
+.section-node-wrapper {
+  align-self: flex-start;
+}
+
+/* Chapters column within a section group */
+.chapters-group-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Mind Map Nodes Styling - Compact for 1-window view */
