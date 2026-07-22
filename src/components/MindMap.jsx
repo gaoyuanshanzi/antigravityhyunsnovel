@@ -9,6 +9,7 @@ const MindMap = ({
   onRenameSection,
   onDeleteSection,
   onAddChapter,
+  onAddChapterAtPosition,
   onRenameChapter,
   onDeleteChapter
 }) => {
@@ -366,6 +367,33 @@ const MindMap = ({
                                   <Trash2 size={12} />
                                 </button>
                               </div>
+                              {/* Top add button (이 챕터 위에 챕터 추가) */}
+                              <button
+                                className="node-add-btn node-add-btn-top"
+                                title="이 챕터 위에 새 챕터 추가"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
+                                  onAddChapterAtPosition(sec.id, ch.id, `챕터 ${totalChapters + 1}`, 'top');
+                                }}
+                              >
+                                <Plus size={10} />
+                                <span className="add-indicator-top">↑</span>
+                              </button>
+
+                              {/* Bottom add button (이 챕터 아래에 챕터 추가) */}
+                              <button
+                                className="node-add-btn node-add-btn-bottom"
+                                title="이 챕터 아래에 새 챕터 추가"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const totalChapters = project.sections.reduce((sum, s) => sum + s.chapters.length, 0);
+                                  onAddChapterAtPosition(sec.id, ch.id, `챕터 ${totalChapters + 1}`, 'bottom');
+                                }}
+                              >
+                                <Plus size={10} />
+                                <span className="add-indicator-bottom">↓</span>
+                              </button>
                             </>
                           )}
                         </div>

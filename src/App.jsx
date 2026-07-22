@@ -213,6 +213,30 @@ function App() {
     }));
   };
 
+  const handleAddChapterAtPosition = (secId, targetChId, chapterTitle, position) => {
+    if (!activeProjectId) return;
+    const newChId = `ch-${Date.now()}`;
+    const newChapter = { id: newChId, title: chapterTitle, content: '' };
+    setProjects(projects.map((p) => {
+      if (p.id !== activeProjectId) return p;
+      return {
+        ...p,
+        sections: p.sections.map((sec) => {
+          if (sec.id !== secId) return sec;
+          const index = sec.chapters.findIndex((ch) => ch.id === targetChId);
+          if (index === -1) return sec;
+          const updatedChapters = [...sec.chapters];
+          if (position === 'top') {
+            updatedChapters.splice(index, 0, newChapter);
+          } else {
+            updatedChapters.splice(index + 1, 0, newChapter);
+          }
+          return { ...sec, chapters: updatedChapters };
+        })
+      };
+    }));
+  };
+
   const handleRenameChapter = (chId, newTitle) => {
     if (!activeProjectId) return;
     setProjects(projects.map((p) => {
@@ -397,6 +421,7 @@ function App() {
               onRenameSection={handleRenameSection}
               onDeleteSection={handleDeleteSection}
               onAddChapter={handleAddChapter}
+              onAddChapterAtPosition={handleAddChapterAtPosition}
               onRenameChapter={handleRenameChapter}
               onDeleteChapter={handleDeleteChapter}
             />
