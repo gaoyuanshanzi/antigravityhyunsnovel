@@ -372,6 +372,78 @@ function App() {
   // ═══════════════════════════════════════════════════════════
   if (!isLoggedIn) return <Login onLogin={handleLogin} />;
 
+  // ── Project Selector Screen (independent render, no workspace-app wrapper) ──
+  if (!activeProjectId) {
+    return (
+      <div className="project-selector-page">
+        <div className="project-selector-card">
+          <div className="selector-header">
+            <Sparkles className="selector-logo" size={32} />
+            <h2>소설 작업실 (Neon DB Cloud)</h2>
+            <p>용량 한계가 없는 Neon.tech PostgreSQL에 소설을 영구 저장합니다. 집필할 소설을 선택해 주세요.</p>
+          </div>
+
+          <div className="projects-grid-list">
+            {projects.length === 0 ? (
+              <div className="empty-db-state">
+                <p>등록된 소설이 없습니다. 아래 버튼으로 새로 만들거나 .html 파일을 가져오세요!</p>
+              </div>
+            ) : (
+              projects.map((proj) => (
+                <div key={proj.id} className="project-card-item"
+                  onClick={() => { setActiveProjectId(proj.id); setActiveMobilePanel(1); }}
+                >
+                  <div className="card-info">
+                    <h3>{proj.title}</h3>
+                    <p>섹션: {proj.sections.length}개 / 총 챕터: {proj.sections.reduce((sum, s) => sum + s.chapters.length, 0)}개</p>
+                  </div>
+                  <button
+                    className="card-delete-btn"
+                    title="클라우드에서 영구 삭제"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteProject(proj.id);
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="selector-actions">
+            <button
+              className="selector-btn create"
+              onClick={() => {
+                const title = prompt('새 소설 제목을 입력하세요:');
+                if (title && title.trim()) handleCreateProject(title.trim());
+              }}
+            >
+              <Plus size={16} />
+              <span>새 소설 생성</span>
+            </button>
+            <button className="selector-btn import" onClick={() => setShowImportModal(true)}>
+              <FolderOpen size={16} />
+              <span>소설 가져오기 (.html)</span>
+            </button>
+            <button className="selector-btn logout" onClick={handleLogout}>
+              <LogOut size={16} />
+              <span>로그아웃</span>
+            </button>
+          </div>
+        </div>
+
+        {showImportModal && (
+          <ImportModal
+            onImport={handleImportProject}
+            onClose={() => setShowImportModal(false)}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="workspace-app">
       {/* ── Top Navbar ── */}
@@ -441,125 +513,53 @@ function App() {
         </nav>
       </header>
 
-      {/* ── Main 3-Panel Grid or Selector ── */}
-      {activeProjectId ? (
-        <main
-          className="workspace-grid"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
+      {/* ── Main 3-Panel Grid ── */}
+      <main
+        className="workspace-grid"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          className="mobile-panels-slider"
+          style={{ transform: `translateX(-${activeMobilePanel * 100}vw)` }}
         >
-          {/* Mobile sliding wrapper */}
-          <div
-            className="mobile-panels-slider"
-            style={{ transform: `translateX(-${activeMobilePanel * 100}vw)` }}
-          >
-            {/* LEFT: Project List */}
-            <div className="mobile-panel-slot">
-              <ProjectList
-                projects={projects}
-                activeProjectId={activeProjectId}
-                onSelectProject={(id) => { setActiveProjectId(id); setActiveMobilePanel(1); }}
-                onCreateProject={handleCreateProject}
-                onRenameProject={handleRenameProject}
-                onDeleteProject={handleDeleteProject}
-                onLogout={handleLogout}
-              />
-            </div>
-
-            {/* CENTER: Mind Map */}
-            <div className="mobile-panel-slot">
-              <MindMap
-                project={activeProject}
-                activeChapterId={activeChapterId}
-                onSelectChapter={handleSelectChapter}
-                onAddSection={handleAddSection}
-                onRenameSection={handleRenameSection}
-                onDeleteSection={handleDeleteSection}
-                onAddChapter={handleAddChapter}
-                onAddChapterAtPosition={handleAddChapterAtPosition}
-                onRenameChapter={handleRenameChapter}
-                onDeleteChapter={handleDeleteChapter}
-              />
-            </div>
-
-            {/* RIGHT: Editor */}
-            <div className="mobile-panel-slot">
-              <Editor
-                project={activeProject}
-                activeChapterId={activeChapterId}
-                onUpdateChapterContent={handleUpdateChapterContent}
-                isSaving={isSaving}
-              />
-            </div>
+          <div className="mobile-panel-slot">
+            <ProjectList
+              projects={projects}
+              activeProjectId={activeProjectId}
+              onSelectProject={(id) => { setActiveProjectId(id); setActiveMobilePanel(1); }}
+              onCreateProject={handleCreateProject}
+              onRenameProject={handleRenameProject}
+              onDeleteProject={handleDeleteProject}
+              onLogout={handleLogout}
+            />
           </div>
-        </main>
-      ) : (
-        <div className="project-selector-overlay">
-          <div className="project-selector-card">
-            <div className="selector-header">
-              <Sparkles className="selector-logo" size={32} />
-              <h2>소설 작업실 (Neon DB Cloud)</h2>
-              <p>용량 한계가 없는 Neon.tech PostgreSQL에 소설을 영구 저장합니다. 집필할 소설을 선택해 주세요.</p>
-            </div>
 
-            <div className="projects-grid-list">
-              {projects.length === 0 ? (
-                <div className="empty-db-state">
-                  <p>등록된 소설이 없습니다. 아래 버튼으로 새로 만들거나 .html 파일을 가져오세요!</p>
-                </div>
-              ) : (
-                projects.map((proj) => (
-                  <div key={proj.id} className="project-card-item" onClick={() => { setActiveProjectId(proj.id); setActiveMobilePanel(1); }}>
-                    <div className="card-info">
-                      <h3>{proj.title}</h3>
-                      <p>섹션: {proj.sections.length}개 / 총 챕터: {proj.sections.reduce((sum, s) => sum + s.chapters.length, 0)}개</p>
-                    </div>
-                    <button
-                      className="card-delete-btn"
-                      title="클라우드에서 영구 삭제"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteProject(proj.id);
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+          <div className="mobile-panel-slot">
+            <MindMap
+              project={activeProject}
+              activeChapterId={activeChapterId}
+              onSelectChapter={handleSelectChapter}
+              onAddSection={handleAddSection}
+              onRenameSection={handleRenameSection}
+              onDeleteSection={handleDeleteSection}
+              onAddChapter={handleAddChapter}
+              onAddChapterAtPosition={handleAddChapterAtPosition}
+              onRenameChapter={handleRenameChapter}
+              onDeleteChapter={handleDeleteChapter}
+            />
+          </div>
 
-            <div className="selector-actions">
-              <button
-                className="selector-btn create"
-                onClick={() => {
-                  const title = prompt('새 소설 제목을 입력하세요:');
-                  if (title && title.trim()) {
-                    handleCreateProject(title.trim());
-                  }
-                }}
-              >
-                <Plus size={16} />
-                <span>새 소설 생성</span>
-              </button>
-              <button
-                className="selector-btn import"
-                onClick={() => setShowImportModal(true)}
-              >
-                <FolderOpen size={16} />
-                <span>소설 가져오기 (.html)</span>
-              </button>
-              <button
-                className="selector-btn logout"
-                onClick={handleLogout}
-              >
-                <LogOut size={16} />
-                <span>로그아웃</span>
-              </button>
-            </div>
+          <div className="mobile-panel-slot">
+            <Editor
+              project={activeProject}
+              activeChapterId={activeChapterId}
+              onUpdateChapterContent={handleUpdateChapterContent}
+              isSaving={isSaving}
+            />
           </div>
         </div>
-      )}
+      </main>
 
       {/* ── Export Modal ── */}
       {showExportModal && (

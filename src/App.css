@@ -1904,20 +1904,15 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Project Selector Dashboard Overlay
+   Project Selector Page (standalone full-page, outside workspace-app)
    ───────────────────────────────────────────────────────────── */
-.project-selector-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
+.project-selector-page {
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(circle at top right, rgba(238, 242, 255, 0.6) 0%, rgba(243, 244, 246, 0.9) 100%);
-  backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  background: radial-gradient(circle at 70% 20%, rgba(238, 242, 255, 0.8) 0%, rgba(243, 244, 246, 1) 100%);
   padding: 20px;
   box-sizing: border-box;
 }
