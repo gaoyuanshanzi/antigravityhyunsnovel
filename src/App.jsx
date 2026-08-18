@@ -5,7 +5,7 @@ import MindMap from './components/MindMap';
 import Editor from './components/Editor';
 import ImportModal from './components/ImportModal';
 import { exportToTxt, exportToHtml, exportToEpub, exportToPdf } from './utils/exporter';
-import { Download, Sparkles, LogOut, FolderOpen, GitCommit, BookOpen, List, Plus } from 'lucide-react';
+import { Download, Sparkles, LogOut, FolderOpen, GitCommit, BookOpen, List, Plus, Trash2 } from 'lucide-react';
 import './App.css';
 
 function App() {
