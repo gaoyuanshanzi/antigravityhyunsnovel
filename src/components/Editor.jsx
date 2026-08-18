@@ -128,6 +128,24 @@ const Editor = ({
         </div>
       </div>
 
+      {/* Top Stats Bar — directly above the superscript/subscript toolbar */}
+      <div className="editor-top-stats">
+        <div className="stat-item">
+          <span>글자수(공백포함):</span>
+          <strong>{stats.chars.toLocaleString()}자</strong>
+        </div>
+        <span className="stat-divider">·</span>
+        <div className="stat-item">
+          <span>공백제외:</span>
+          <strong>{stats.charsNoSpace.toLocaleString()}자</strong>
+        </div>
+        <span className="stat-divider">·</span>
+        <div className="stat-item">
+          <span>단어수:</span>
+          <strong>{stats.words.toLocaleString()}단어</strong>
+        </div>
+      </div>
+
       {/* Formatting Toolbar */}
       <div className="editor-toolbar">
         <div className="toolbar-group">
@@ -175,22 +193,6 @@ const Editor = ({
           data-placeholder="여기에 소설 내용을 자유롭게 작성해 보세요. 입력 시 실시간으로 자동 저장됩니다..."
           spellCheck={false}
         />
-      </div>
-
-      {/* Footer Stats */}
-      <div className="editor-footer">
-        <div className="stat-item">
-          <span>글자 수 (공백 포함):</span>
-          <strong>{stats.chars.toLocaleString()} 자</strong>
-        </div>
-        <div className="stat-item">
-          <span>글자 수 (공백 제외):</span>
-          <strong>{stats.charsNoSpace.toLocaleString()} 자</strong>
-        </div>
-        <div className="stat-item">
-          <span>단어 수:</span>
-          <strong>{stats.words.toLocaleString()} 단어</strong>
-        </div>
       </div>
     </div>
   );
