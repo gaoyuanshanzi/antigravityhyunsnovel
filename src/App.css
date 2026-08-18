@@ -1035,6 +1035,7 @@
   padding: 10px 36px;
   border-top: 1px solid #f0f0f0;
   background: #fafafa;
+  flex-shrink: 0;
 }
 
 .stat-item {
@@ -1776,8 +1777,7 @@
 
   /* Enforce panel dimensions so they occupy exactly 100% of their slot width */
   .left-panel,
-  .center-panel,
-  .right-panel {
+  .center-panel {
     border-right: none !important;
     border-left: none !important;
     width: 100% !important;
@@ -1787,6 +1787,20 @@
     min-height: 100% !important;
     box-sizing: border-box !important;
     overflow-y: auto !important;
+  }
+
+  .right-panel {
+    border-right: none !important;
+    border-left: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
   }
 
   /* Mobile Top Tabs Navigation */
@@ -1941,7 +1955,31 @@
   }
 
   .editor-footer {
-    padding: 10px 16px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: 8px 10px !important;
+    background: #fafafa !important;
+    border-top: 1px solid #e5e7eb !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    z-index: 5 !important;
+  }
+
+  .editor-footer .stat-item {
+    font-size: 0.62rem !important;
+    color: #6b7280 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    white-space: nowrap !important;
+  }
+
+  .editor-footer .stat-item strong {
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    margin-left: 2px !important;
   }
 
   /* Editor content area should not overflow */
