@@ -1391,7 +1391,8 @@
 }
 
 .mobile-top-tabs,
-.mobile-bottom-nav {
+.mobile-bottom-nav,
+.mobile-header-tabs {
   display: none; /* Hide mobile nav elements on desktop */
 }
 
@@ -1631,25 +1632,107 @@
   }
 
   .workspace-navbar {
-    padding: 0 14px;
-    height: 52px !important;
+    padding: 0 8px !important;
+    height: 46px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .navbar-top-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 4px !important;
+  }
+
+  .navbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 3px !important;
     flex-shrink: 0 !important;
   }
 
+  .navbar-logo {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
   .navbar-left h1 {
-    font-size: 1.05rem;
+    font-size: 0.74rem !important;
+    margin: 0 !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+  }
+
+  .version-tag {
+    font-size: 0.5rem !important;
+    padding: 1px 3px !important;
+  }
+
+  /* 3 Tabs directly beside logo on mobile */
+  .mobile-header-tabs {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    background: rgba(79, 70, 229, 0.08) !important;
+    padding: 2px !important;
+    border-radius: 7px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mobile-header-tabs .mobile-tab-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    color: #6b7280 !important;
+    font-size: 0.62rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    padding: 4px 6px !important;
+    border-radius: 5px !important;
+    transition: all 0.15s ease !important;
+    font-family: inherit !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+  }
+
+  .mobile-header-tabs .mobile-tab-btn.active {
+    background: #ffffff !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25) !important;
+  }
+
+  .mobile-header-tabs .mobile-tab-btn.active::after {
+    display: none !important;
   }
 
   .navbar-btn-label {
     display: none; /* Hide labels on mobile to save space */
   }
 
+  .navbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    flex-shrink: 0 !important;
+  }
+
   .navbar-btn {
-    padding: 8px;
-    border-radius: 50%; /* Make round icon buttons */
-    width: 36px;
-    height: 36px;
-    justify-content: center;
+    padding: 4px !important;
+    border-radius: 6px !important;
+    width: 28px !important;
+    height: 28px !important;
+    justify-content: center !important;
+  }
+
+  .navbar-btn svg {
+    width: 14px !important;
+    height: 14px !important;
   }
 
   .workspace-grid {
